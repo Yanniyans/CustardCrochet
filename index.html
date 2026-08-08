@@ -6,11 +6,11 @@
     <title>CustardCrochet</title>
     <style>
         :root {
-            --custard: #FCF5C7;
-            --caramel: #A56F43;
-            --chocolate: #4C3120;
-            --mustard: #F0D348;
-            --orange: #EEA445;
+            --custard: #FDF8E1;
+            --caramel: #D48C4A;
+            --chocolate: #4A2E15;
+            --mustard: #F4C430;
+            --orange: #E67E22;
         }
         body {
             background-color: var(--custard);
@@ -58,7 +58,7 @@
             padding: 10px 15px;
         }
         .icon-btn.danger {
-            background-color: var(--caramel);
+            background-color: #d9534f;
         }
         #importSection {
             background-color: white;
@@ -125,7 +125,7 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(76, 49, 32, 0.8);
+            background-color: rgba(74, 46, 21, 0.8);
         }
         .modal-content {
             background-color: var(--custard);
@@ -190,7 +190,7 @@
     </div>
 
     <script>
-        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxGYNE5pvayGT_GHt2JgaN2008-N4WdhT3eQvnN9pAiLH-844nRQqJwY5kCDpLTyj9LrA/exec";
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec";
         
         let projects = JSON.parse(localStorage.getItem("custard_projects")) || [];
         let currentProjectId = localStorage.getItem("custard_current_project");
@@ -252,7 +252,7 @@
             }
             syncStatus.innerText = "Consulting the Purins...";
             try {
-                const response = await fetch(GOOGLE_WEB_APP_URL, {
+                await fetch(GOOGLE_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
@@ -295,11 +295,6 @@
             try {
                 const newProj = JSON.parse(document.getElementById('jsonInput').value);
                 if (!newProj.projectId || !newProj.projectName || !newProj.pattern) throw new Error("Missing required JSON labels");
-                
-                // Prevent duplicate imports
-                if (projects.find(p => p.projectId === newProj.projectId)) {
-                    throw new Error("Project with this ID already exists!");
-                }
                 
                 projects.push(newProj);
                 localStorage.setItem("custard_projects", JSON.stringify(projects));
