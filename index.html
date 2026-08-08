@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CustardCrochet 2.0</title>
+    <title>CustardCrochet</title>
     <style>
         /* Your Custom Color Palette */
         :root {
@@ -304,28 +304,35 @@
         }
 
         // --- UPGRADED SYNC FUNCTION WITH PURINS ---
+        // --- UPGRADED SYNC FUNCTION WITH STRICT DEBUGGING ---
         function sendToGoogle(payload) {
-            const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec"; 
+            // Put your URL right here!
+            const GOOGLE_WEB_APP_URL = "PASTE_YOUR_COPIED_URL_HERE"; 
             
-            if (GOOGLE_WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec") {
-                // 1. Tell the user the sync is starting
-                syncStatusEl.innerText = "Consulting the Purins... 🍮";
-                syncStatusEl.style.opacity = 1;
-
-                fetch(GOOGLE_WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
-                .then(response => {
-                    // 2. Tell the user the sync was successful
-                    syncStatusEl.innerText = "The Purins have aggreed! ✨";
-                    // 3. Fade it out gently after 3 seconds
-                    setTimeout(() => { syncStatusEl.style.opacity = 0; }, 3000);
-                })
-                .catch(err => {
-                    // 4. Handle offline mode / errors gracefully
-                    console.error("Cloud Sync failed:", err);
-                    syncStatusEl.innerText = "The Purins are asleep (Saved to device only) 💤";
-                    setTimeout(() => { syncStatusEl.style.opacity = 0; }, 4000);
-                });
+            // If the URL is still the placeholder, SCREAM at the user
+            if (GOOGLE_WEB_APP_URL === "PASTE_YOUR_COPIED_URL_HERE" || GOOGLE_WEB_APP_URL === "") {
+                alert("⚠️ WARNING: The app is trying to sync, but the Google URL is missing! Check line 289.");
+                return; // Stop the function completely
             }
+
+            // 1. Tell the user the sync is starting
+            syncStatusEl.innerText = "Consulting the Purins... 🍮";
+            syncStatusEl.style.opacity = 1;
+
+            // 2. Actually send the data
+            fetch(GOOGLE_WEB_APP_URL, { 
+                method: "POST", 
+                body: JSON.stringify(payload) 
+            })
+            .then(response => {
+                syncStatusEl.innerText = "The Purins have aggreed! ✨";
+                setTimeout(() => { syncStatusEl.style.opacity = 0; }, 3000);
+            })
+            .catch(err => {
+                console.error("Cloud Sync failed:", err);
+                syncStatusEl.innerText = "The Purins are asleep (Saved to device only) 💤";
+                setTimeout(() => { syncStatusEl.style.opacity = 0; }, 4000);
+            });
         }
 
         // --- EVENT LISTENERS ---
