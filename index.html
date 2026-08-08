@@ -5,399 +5,353 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CustardCrochet</title>
     <style>
-        /* Your Custom Color Palette */
         :root {
-            --custard-pale: #FDF5B7;
-            --caramel-med: #9E6C47;
-            --choco-dark: #4B2F1D;
-            --mustard-bright: #F3D248;
-            --orange-warm: #EBA142;
-            --danger-red: #E07A5F;
+            --custard: #FDF8E1;
+            --caramel: #D48C4A;
+            --chocolate: #4A2E15;
+            --mustard: #F4C430;
+            --orange: #E67E22;
         }
-
         body {
+            background-color: var(--custard);
+            color: var(--chocolate);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--custard-pale);
-            color: var(--choco-dark);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
             text-align: center;
             margin: 0;
-            position: relative;
+            padding: 20px;
         }
-
-        #app-title {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: var(--choco-dark);
-            margin: 40px 0 5px 0;
-            letter-spacing: 1px;
+        h1 {
+            color: var(--chocolate);
+            font-size: 2.5em;
+            margin-bottom: 5px;
         }
-
-        /* The Purin Sync Status */
-        #sync-status {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--caramel-med);
-            margin-bottom: 15px;
-            height: 20px; 
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+        #syncStatus {
+            font-size: 0.9em;
+            color: var(--caramel);
+            margin-bottom: 20px;
             font-style: italic;
+            height: 20px;
         }
-
-        /* Top Right Add Button */
-        #open-import-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: var(--mustard-bright);
-            color: var(--choco-dark);
-            border: 2px solid var(--caramel-med);
-            padding: 10px 15px;
-            font-weight: bold;
+        .header-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid var(--caramel);
+            border-radius: 8px;
+            background-color: white;
+            color: var(--chocolate);
+        }
+        button {
+            border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 3px 0 var(--caramel-med);
-            transition: all 0.1s;
+            font-weight: bold;
         }
-
-        #open-import-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 0 0 var(--caramel-med);
+        .icon-btn {
+            background-color: var(--caramel);
+            color: white;
+            padding: 10px 15px;
         }
-
-        /* Project Selector Area */
-        .project-header-area {
-            display: flex;
-            gap: 10px;
-            width: 100%;
+        .icon-btn.danger {
+            background-color: #d9534f;
+        }
+        #importSection {
+            background-color: white;
+            border: 2px dashed var(--caramel);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 0 auto 20px auto;
             max-width: 400px;
+            display: none;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            border: 1px solid var(--caramel);
+        }
+        #patternDisplay {
+            background-color: white;
+            border: 2px solid var(--caramel);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 0 auto 20px auto;
+            max-width: 400px;
+            min-height: 120px;
+        }
+        .instruction {
+            font-size: 1.5em;
+            font-weight: bold;
             margin-bottom: 10px;
         }
-
-        #project-selector {
-            flex: 1;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--choco-dark);
-            background-color: white;
-            border: 3px solid var(--caramel-med);
-            border-radius: 10px;
-            padding: 10px;
-            cursor: pointer;
+        .notes {
+            font-size: 1em;
+            color: var(--caramel);
         }
-
-        #delete-project-btn {
-            background-color: var(--danger-red);
+        .giant-btn {
+            background-color: var(--orange);
             color: white;
-            border: 3px solid #C25E45;
-            border-radius: 10px;
-            padding: 10px 15px;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-
-        /* Main UI */
-        .row-container {
-            background: white;
-            padding: 30px;
+            font-size: 2em;
+            padding: 20px 40px;
             border-radius: 15px;
-            border: 3px solid var(--caramel-med);
-            box-shadow: 0 6px 12px rgba(75, 47, 29, 0.15);
-            width: 100%;
+            box-shadow: 0 6px var(--caramel);
+            transition: all 0.1s;
+            margin-bottom: 20px;
+            width: 90%;
             max-width: 400px;
-            margin-bottom: 25px;
-            box-sizing: border-box;
         }
-
-        #current-row-title { font-weight: bold; color: var(--orange-warm); font-size: 1.2rem; text-transform: uppercase; }
-        #current-instruction { font-size: 1.8rem; font-weight: bold; margin: 15px 0; line-height: 1.3; color: var(--choco-dark); }
-        #current-notes { font-style: italic; color: var(--caramel-med); margin-bottom: 20px; }
-        #next-instruction { font-size: 1rem; color: var(--caramel-med); border-top: 1px dashed var(--caramel-med); padding-top: 15px; opacity: 0.9; }
-
-        /* Buttons */
-        .controls-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
-        .secondary-controls { display: flex; gap: 15px; width: 100%; }
-        
-        button { border: none; border-radius: 50px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: all 0.1s; }
-        
-        #next-button { background-color: var(--orange-warm); color: var(--choco-dark); padding: 20px; font-size: 1.5rem; box-shadow: 0 6px 0 var(--caramel-med); width: 100%; }
-        #next-button:active { transform: translateY(6px); box-shadow: 0 0 0 var(--caramel-med); background-color: var(--mustard-bright); }
-        
-        .btn-small { flex: 1; padding: 15px; font-size: 1rem; background-color: var(--custard-pale); color: var(--choco-dark); border: 2px solid var(--caramel-med); box-shadow: 0 4px 0 var(--caramel-med); }
-        .btn-small:active { transform: translateY(4px); box-shadow: 0 0 0 var(--caramel-med); background-color: white; }
-
-        /* Modals (Import & Viewer) */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(75, 47, 29, 0.9); z-index: 1000; justify-content: center; align-items: center;
+        .giant-btn:active {
+            background-color: var(--mustard);
+            box-shadow: 0 0 var(--caramel);
+            transform: translateY(6px);
         }
-
+        .secondary-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .secondary-btn {
+            background-color: var(--chocolate);
+            color: white;
+            padding: 10px 20px;
+        }
+        /* Pattern Viewer Modal */
+        #viewerModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(74, 46, 21, 0.8);
+        }
         .modal-content {
-            background: white; width: 90%; max-width: 500px; max-height: 80vh;
-            border-radius: 15px; border: 3px solid var(--caramel-med); display: flex; flex-direction: column; overflow: hidden;
+            background-color: var(--custard);
+            margin: 10% auto;
+            padding: 20px;
+            border: 3px solid var(--caramel);
+            border-radius: 12px;
+            width: 80%;
+            max-width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
         }
-
-        .modal-header { background: var(--mustard-bright); padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.2rem; }
-        .close-modal-btn { background: transparent; border: none; font-size: 1.5rem; color: var(--choco-dark); box-shadow: none; padding: 0; }
-        .modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-
-        textarea { width: 100%; height: 200px; border: 2px solid var(--caramel-med); border-radius: 8px; padding: 10px; font-family: monospace; resize: none; box-sizing: border-box; }
-        
-        #submit-import-btn { background-color: var(--orange-warm); color: var(--choco-dark); padding: 15px; font-size: 1.2rem; margin-top: 10px; box-shadow: 0 4px 0 var(--caramel-med); }
-        #submit-import-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--caramel-med); }
-
-        /* Viewer Rows */
-        .viewer-row { padding: 15px; border-radius: 8px; text-align: left; cursor: pointer; border: 1px solid #eee; }
-        .row-done { color: var(--caramel-med); background: var(--custard-pale); opacity: 0.7; }
-        .row-current { background: var(--orange-warm); color: white; border: 2px solid var(--choco-dark); font-weight: bold; }
-        .row-future { color: var(--choco-dark); }
-
-        #completion-message { display: none; font-size: 2rem; color: var(--orange-warm); font-weight: bold; text-shadow: 1px 1px 0px var(--choco-dark); }
-        #no-projects-msg { font-size: 1.2rem; font-weight: bold; color: var(--caramel-med); margin-top: 50px; }
+        .viewer-row {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid var(--caramel);
+            cursor: pointer;
+            text-align: left;
+        }
+        .viewer-row.finished { color: var(--caramel); text-decoration: line-through; }
+        .viewer-row.current { background-color: var(--mustard); color: var(--chocolate); font-weight: bold; border-radius: 5px;}
+        .viewer-row.future { color: var(--chocolate); }
     </style>
 </head>
 <body>
 
-    <button id="open-import-btn">+ New Pattern</button>
-    <div id="app-title">CustardCrochet</div>
-    
-    <div class="project-header-area" id="header-area" style="display:none;">
-        <select id="project-selector"></select>
-        <button id="delete-project-btn" title="Delete Project">🗑️</button>
+    <h1>CustardCrochet</h1>
+    <div id="syncStatus"></div>
+
+    <div class="header-controls">
+        <select id="projectSelect"></select>
+        <button class="icon-btn danger" id="deleteBtn">🗑️</button>
+        <button class="icon-btn" id="toggleImportBtn">+ New Pattern</button>
     </div>
 
-    <div id="sync-status"></div>
-
-    <div id="no-projects-msg">No projects found. Click "+ New Pattern" to start!</div>
-
-    <div class="row-container" id="tracker-ui" style="display:none;">
-        <div id="current-row-title">ROW 1</div>
-        <div id="current-instruction">Loading...</div>
-        <div id="current-notes"></div>
-        <div id="next-instruction">Next: ...</div>
+    <div id="importSection">
+        <h3>Import JSON Pattern</h3>
+        <textarea id="jsonInput" placeholder="Paste your valid pattern JSON here..."></textarea>
+        <br>
+        <button class="icon-btn" id="importBtn">Import</button>
     </div>
 
-    <div id="completion-message">Project Complete! 🎉</div>
-
-    <div class="controls-container" id="controls" style="display:none;">
-        <button id="next-button">DONE WITH ROW</button>
-        <div class="secondary-controls">
-            <button class="btn-small" id="undo-button">↩ Undo</button>
-            <button class="btn-small" id="view-all-button">≡ View Pattern</button>
-        </div>
+    <div id="patternDisplay">
+        <div id="rowLabel" style="color: var(--caramel); font-weight: bold; margin-bottom: 5px;"></div>
+        <div class="instruction" id="currentInstruction">Loading...</div>
+        <div class="notes" id="currentNotes"></div>
     </div>
 
-    <div id="viewer-modal" class="modal-overlay">
+    <button class="giant-btn" id="doneBtn">Done With Row</button>
+
+    <div class="secondary-controls">
+        <button class="secondary-btn" id="undoBtn">Undo</button>
+        <button class="secondary-btn" id="viewerBtn">View Pattern</button>
+    </div>
+
+    <div id="viewerModal">
         <div class="modal-content">
-            <div class="modal-header"><span id="modal-project-name">Pattern Overview</span><button class="close-modal-btn" onclick="document.getElementById('viewer-modal').style.display='none'">✖</button></div>
-            <div class="modal-body" id="pattern-list"></div>
-        </div>
-    </div>
-
-    <div id="import-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header"><span>Import JSON Pattern</span><button class="close-modal-btn" onclick="document.getElementById('import-modal').style.display='none'">✖</button></div>
-            <div class="modal-body">
-                <textarea id="import-textarea" placeholder="Paste your generated JSON here..."></textarea>
-                <button id="submit-import-btn">IMPORT PROJECT</button>
-            </div>
+            <h2>Pattern Viewer</h2>
+            <div id="viewerList"></div>
+            <button class="secondary-btn" style="margin-top: 15px;" id="closeViewerBtn">Close</button>
         </div>
     </div>
 
     <script>
-        // --- CORE DATABASE ---
-        let projectsDatabase = JSON.parse(localStorage.getItem("custard_projects")) || [];
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec";
+        
+        let projects = JSON.parse(localStorage.getItem("custard_projects")) || [];
+        let currentProjectId = localStorage.getItem("custard_current_project");
         let activeProject = null;
         let currentRowIndex = 0;
 
-        // --- DOM ELEMENTS ---
-        const selectorEl = document.getElementById('project-selector');
-        const headerArea = document.getElementById('header-area');
-        const trackerUI = document.getElementById('tracker-ui');
-        const controlsUI = document.getElementById('controls');
-        const noProjectsMsg = document.getElementById('no-projects-msg');
-        const syncStatusEl = document.getElementById('sync-status');
-        
-        function initApp() {
-            selectorEl.innerHTML = "";
-            if (projectsDatabase.length === 0) {
-                headerArea.style.display = 'none';
-                trackerUI.style.display = 'none';
-                controlsUI.style.display = 'none';
-                noProjectsMsg.style.display = 'block';
+        const syncStatus = document.getElementById('syncStatus');
+        const projectSelect = document.getElementById('projectSelect');
+
+        function init() {
+            if (projects.length > 0) {
+                if (!currentProjectId || !projects.find(p => p.projectId === currentProjectId)) {
+                    currentProjectId = projects[0].projectId;
+                }
+                loadProject(currentProjectId);
+            } else {
+                document.getElementById('currentInstruction').innerText = "No projects found. Import one to start!";
+            }
+            populateDropdown();
+        }
+
+        function populateDropdown() {
+            projectSelect.innerHTML = "";
+            projects.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p.projectId;
+                opt.innerText = p.projectName;
+                if (p.projectId === currentProjectId) opt.selected = true;
+                projectSelect.appendChild(opt);
+            });
+        }
+
+        function loadProject(id) {
+            activeProject = projects.find(p => p.projectId === id);
+            currentProjectId = id;
+            localStorage.setItem("custard_current_project", id);
+            currentRowIndex = parseInt(localStorage.getItem(`${id}_row`)) || 0;
+            renderRow();
+        }
+
+        function renderRow() {
+            if (!activeProject) return;
+            if (currentRowIndex >= activeProject.pattern.length) {
+                document.getElementById('rowLabel').innerText = "";
+                document.getElementById('currentInstruction').innerText = "Project Complete! 🎉";
+                document.getElementById('currentNotes').innerText = "";
                 return;
             }
-
-            noProjectsMsg.style.display = 'none';
-            headerArea.style.display = 'flex';
-            
-            projectsDatabase.forEach((proj, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.text = proj.projectName;
-                selectorEl.appendChild(option);
-            });
-            
-            activeProject = projectsDatabase[0];
-            loadProjectState();
+            const rowData = activeProject.pattern[currentRowIndex];
+            document.getElementById('rowLabel').innerText = `Row ${rowData.rowNumber} of ${activeProject.totalRows}`;
+            document.getElementById('currentInstruction').innerText = rowData.instruction;
+            document.getElementById('currentNotes').innerText = rowData.notes ? `Notes: ${rowData.notes}` : "";
         }
 
-        function loadProjectState() {
-            if(!activeProject) return;
-            currentRowIndex = parseInt(localStorage.getItem(activeProject.projectId + "_row")) || 0;
-            updateUI();
-        }
-
-        function updateUI() {
-            if(!activeProject) return;
-            document.getElementById('modal-project-name').innerText = activeProject.projectName;
-
-            if (currentRowIndex >= activeProject.pattern.length) {
-                trackerUI.style.display = 'none';
-                document.getElementById('next-button').style.display = 'none';
-                document.getElementById('completion-message').style.display = 'block';
-                controlsUI.style.display = 'flex';
-            } else {
-                trackerUI.style.display = 'block';
-                document.getElementById('next-button').style.display = 'block';
-                document.getElementById('completion-message').style.display = 'none';
-                controlsUI.style.display = 'flex';
-
-                const currentRow = activeProject.pattern[currentRowIndex];
-                const nextRow = activeProject.pattern[currentRowIndex + 1];
-
-                document.getElementById('current-row-title').innerText = `ROW ${currentRow.rowNumber} of ${activeProject.totalRows}`;
-                document.getElementById('current-instruction').innerText = currentRow.instruction;
-                document.getElementById('current-notes').innerText = currentRow.notes || "";
-                document.getElementById('next-instruction').innerText = nextRow ? `Next Row (${nextRow.rowNumber}): ${nextRow.instruction}` : "Next: Finish project!";
+        async function sendToGoogle(payload) {
+            if (GOOGLE_WEB_APP_URL === "PASTE_YOUR_COPIED_URL_HERE" || !GOOGLE_WEB_APP_URL) {
+                alert("WARNING: The app is trying to sync, but the Google URL is missing!");
+                return;
             }
-            populateModal(); 
-        }
-
-        function populateModal() {
-            const patternList = document.getElementById('pattern-list');
-            patternList.innerHTML = ""; 
-            activeProject.pattern.forEach((row, index) => {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'viewer-row';
-                if (index < currentRowIndex) rowDiv.classList.add('row-done');
-                else if (index === currentRowIndex) rowDiv.classList.add('row-current');
-                else rowDiv.classList.add('row-future');
-                rowDiv.innerHTML = `<strong>Row ${row.rowNumber}:</strong> ${row.instruction}`;
-                rowDiv.addEventListener('click', () => {
-                    currentRowIndex = index;
-                    syncProgress();
-                    updateUI();
-                    document.getElementById('viewer-modal').style.display = "none";
-                });
-                patternList.appendChild(rowDiv);
-            });
-        }
-
-        function syncProgress() {
-            localStorage.setItem(activeProject.projectId + "_row", currentRowIndex);
-            sendToGoogle({ action: "updateProgress", projectId: activeProject.projectId, row: currentRowIndex });
-        }
-
-        // --- UPGRADED SYNC FUNCTION WITH STRICT DEBUGGING ---
-        function sendToGoogle(payload) {
-            // Your exact URL is now embedded right here!
-            const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec"; 
-            
-            // If the URL is still the placeholder, SCREAM at the user
-            if (GOOGLE_WEB_APP_URL === "PASTE_YOUR_COPIED_URL_HERE" || GOOGLE_WEB_APP_URL === "") {
-                alert("⚠️ WARNING: The app is trying to sync, but the Google URL is missing! Check line 289.");
-                return; // Stop the function completely
-            }
-
-            // 1. Tell the user the sync is starting
-            syncStatusEl.innerText = "Consulting the Purins... 🍮";
-            syncStatusEl.style.opacity = 1;
-
-            // 2. Actually send the data
-            fetch(GOOGLE_WEB_APP_URL, { 
-                method: "POST", 
-                body: JSON.stringify(payload) 
-            })
-            .then(response => {
-                // 3. Tell the user the sync was successful
-                syncStatusEl.innerText = "The Purins have aggreed! 🍮";
-                // Fade it out gently after 3 seconds
-                setTimeout(() => { syncStatusEl.style.opacity = 0; }, 3000);
-            })
-            .catch(err => {
-                // 4. Handle offline mode / errors gracefully
-                console.error("Cloud Sync failed:", err);
-                syncStatusEl.innerText = "The Purins are asleep (Saved to device only) 💤";
-                setTimeout(() => { syncStatusEl.style.opacity = 0; }, 4000);
-            });
-        }
-
-        // --- EVENT LISTENERS ---
-        selectorEl.addEventListener('change', (e) => {
-            activeProject = projectsDatabase[e.target.value];
-            loadProjectState();
-        });
-
-        document.getElementById('next-button').addEventListener('click', () => { currentRowIndex++; syncProgress(); updateUI(); });
-        document.getElementById('undo-button').addEventListener('click', () => { if (currentRowIndex > 0) { currentRowIndex--; syncProgress(); updateUI(); } });
-        document.getElementById('view-all-button').addEventListener('click', () => { 
-            document.getElementById('viewer-modal').style.display = "flex";
-            setTimeout(() => { const currentEl = document.querySelector('.row-current'); if (currentEl) currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 10);
-        });
-
-        document.getElementById('open-import-btn').addEventListener('click', () => { document.getElementById('import-modal').style.display = 'flex'; });
-
-        document.getElementById('delete-project-btn').addEventListener('click', () => {
-            if(confirm(`Are you sure you want to delete "${activeProject.projectName}"?`)) {
-                sendToGoogle({ action: "deleteProject", projectId: activeProject.projectId });
-                localStorage.removeItem(activeProject.projectId + "_row");
-                projectsDatabase = projectsDatabase.filter(p => p.projectId !== activeProject.projectId);
-                localStorage.setItem("custard_projects", JSON.stringify(projectsDatabase));
-                initApp();
-            }
-        });
-
-        document.getElementById('submit-import-btn').addEventListener('click', () => {
-            const jsonText = document.getElementById('import-textarea').value;
+            syncStatus.innerText = "Consulting the Purins...";
             try {
-                const parsedData = JSON.parse(jsonText);
-                
-                if (!parsedData.projectId) throw new Error("Missing 'projectId'.");
-                if (!parsedData.projectName) throw new Error("Missing 'projectName'.");
-                if (!parsedData.totalRows) throw new Error("Missing 'totalRows'.");
-                if (!parsedData.pattern || !Array.isArray(parsedData.pattern)) throw new Error("Missing 'pattern' array.");
-
-                const existingIndex = projectsDatabase.findIndex(p => p.projectId === parsedData.projectId);
-                if (existingIndex > -1) {
-                    projectsDatabase[existingIndex] = parsedData; 
-                } else {
-                    projectsDatabase.push(parsedData); 
-                }
-
-                localStorage.setItem("custard_projects", JSON.stringify(projectsDatabase));
-                
-                sendToGoogle({
-                    action: "addProject",
-                    projectId: parsedData.projectId,
-                    projectName: parsedData.projectName,
-                    patternJSON: JSON.stringify(parsedData)
+                await fetch(GOOGLE_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
+                syncStatus.innerText = "The Purins have aggreed!";
+                setTimeout(() => syncStatus.innerText = "", 3000);
+            } catch (e) {
+                syncStatus.innerText = "The Purins are asleep (Offline)";
+            }
+        }
 
-                document.getElementById('import-textarea').value = "";
-                document.getElementById('import-modal').style.display = 'none';
-                initApp();
+        // --- Event Listeners ---
+        document.getElementById('doneBtn').addEventListener('click', () => {
+            if (!activeProject || currentRowIndex >= activeProject.pattern.length) return;
+            currentRowIndex++;
+            localStorage.setItem(`${currentProjectId}_row`, currentRowIndex);
+            renderRow();
+            sendToGoogle({ action: "updateProgress", projectId: currentProjectId, currentRow: currentRowIndex });
+        });
+
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            if (!activeProject || currentRowIndex <= 0) return;
+            currentRowIndex--;
+            localStorage.setItem(`${currentProjectId}_row`, currentRowIndex);
+            renderRow();
+            sendToGoogle({ action: "updateProgress", projectId: currentProjectId, currentRow: currentRowIndex });
+        });
+
+        projectSelect.addEventListener('change', (e) => loadProject(e.target.value));
+
+        // Import Toggle
+        document.getElementById('toggleImportBtn').addEventListener('click', () => {
+            const sec = document.getElementById('importSection');
+            sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // Import Logic
+        document.getElementById('importBtn').addEventListener('click', () => {
+            try {
+                const newProj = JSON.parse(document.getElementById('jsonInput').value);
+                if (!newProj.projectId || !newProj.projectName || !newProj.pattern) throw new Error("Missing required JSON labels");
                 
-            } catch (error) {
-                alert("IMPORT FAILED: " + error.message + "\n\nPlease check that you copied the JSON exactly.");
+                projects.push(newProj);
+                localStorage.setItem("custard_projects", JSON.stringify(projects));
+                document.getElementById('importSection').style.display = 'none';
+                document.getElementById('jsonInput').value = "";
+                
+                sendToGoogle({ action: "addProject", projectId: newProj.projectId, projectName: newProj.projectName, patternJSON: JSON.stringify(newProj) });
+                
+                init();
+                loadProject(newProj.projectId);
+            } catch (e) {
+                alert("Invalid JSON format! " + e.message);
             }
         });
 
-        initApp();
+        // Delete Logic
+        document.getElementById('deleteBtn').addEventListener('click', () => {
+            if (!activeProject) return;
+            if(confirm(`Are you sure you want to delete ${activeProject.projectName}?`)) {
+                projects = projects.filter(p => p.projectId !== currentProjectId);
+                localStorage.setItem("custard_projects", JSON.stringify(projects));
+                localStorage.removeItem(`${currentProjectId}_row`);
+                
+                sendToGoogle({ action: "deleteProject", projectId: currentProjectId });
+                
+                currentProjectId = null;
+                init();
+            }
+        });
+
+        // Pattern Viewer
+        document.getElementById('viewerBtn').addEventListener('click', () => {
+            if (!activeProject) return;
+            const list = document.getElementById('viewerList');
+            list.innerHTML = "";
+            activeProject.pattern.forEach((row, i) => {
+                let div = document.createElement('div');
+                div.innerText = `Row ${row.rowNumber}: ${row.instruction}`;
+                div.className = 'viewer-row ' + (i < currentRowIndex ? 'finished' : (i === currentRowIndex ? 'current' : 'future'));
+                div.onclick = () => {
+                    currentRowIndex = i;
+                    localStorage.setItem(`${currentProjectId}_row`, currentRowIndex);
+                    renderRow();
+                    sendToGoogle({ action: "updateProgress", projectId: currentProjectId, currentRow: currentRowIndex });
+                    document.getElementById('viewerModal').style.display = 'none';
+                };
+                list.appendChild(div);
+            });
+            document.getElementById('viewerModal').style.display = 'block';
+        });
+
+        document.getElementById('closeViewerBtn').addEventListener('click', () => {
+            document.getElementById('viewerModal').style.display = 'none';
+        });
+
+        // Start App
+        init();
     </script>
 </body>
 </html>
