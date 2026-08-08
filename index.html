@@ -1,450 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CustardCrochet</title>
-    <style>
-        /* Your Custom Color Palette */
-        :root {
-            --custard-pale: #FDF5B7;
-            --caramel-med: #9E6C47;
-            --choco-dark: #4B2F1D;
-            --mustard-bright: #F3D248;
-            --orange-warm: #EBA142;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--custard-pale);
-            color: var(--choco-dark);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            text-align: center;
-            margin: 0;
-        }
-
-        #app-title {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: var(--choco-dark);
-            margin: 10px 0 15px 0;
-            letter-spacing: 1px;
-        }
-
-        /* New Project Selector Styling */
-        #project-selector {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: var(--choco-dark);
-            background-color: white;
-            border: 3px solid var(--caramel-med);
-            border-radius: 10px;
-            padding: 10px;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(75, 47, 29, 0.1);
-        }
-
-        #project-selector:focus {
-            outline: none;
-            border-color: var(--orange-warm);
-        }
-
-        .row-container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            border: 3px solid var(--caramel-med);
-            box-shadow: 0 6px 12px rgba(75, 47, 29, 0.15);
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 25px;
-            box-sizing: border-box;
-        }
-
-        #current-row-title {
-            font-weight: bold;
-            color: var(--orange-warm);
-            font-size: 1.2rem;
-            text-transform: uppercase;
-        }
-
-        #current-instruction {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin: 15px 0;
-            line-height: 1.3;
-            color: var(--choco-dark);
-        }
-
-        #current-notes {
-            font-style: italic;
-            color: var(--caramel-med);
-            margin-bottom: 20px;
-        }
-
-        #next-instruction {
-            font-size: 1rem;
-            color: var(--caramel-med);
-            border-top: 1px dashed var(--caramel-med);
-            padding-top: 15px;
-            opacity: 0.9;
-        }
-
-        .controls-container {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .secondary-controls {
-            display: flex;
-            gap: 15px;
-            width: 100%;
-        }
-
-        button {
-            border: none;
-            border-radius: 50px;
-            font-weight: 900;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
-        }
-
-        #next-button {
-            background-color: var(--orange-warm);
-            color: var(--choco-dark);
-            padding: 20px;
-            font-size: 1.5rem;
-            box-shadow: 0 6px 0 var(--caramel-med);
-            width: 100%;
-        }
-
-        #next-button:active {
-            transform: translateY(6px);
-            box-shadow: 0 0 0 var(--caramel-med);
-            background-color: var(--mustard-bright);
-        }
-
-        .btn-small {
-            flex: 1;
-            padding: 15px;
-            font-size: 1rem;
-            background-color: var(--custard-pale);
-            color: var(--choco-dark);
-            border: 2px solid var(--caramel-med);
-            box-shadow: 0 4px 0 var(--caramel-med);
-        }
-
-        .btn-small:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 var(--caramel-med);
-            background-color: white;
-        }
-
-        /* Modal Viewer Styling */
-        #viewer-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(75, 47, 29, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            width: 90%;
-            max-width: 500px;
-            max-height: 80vh;
-            border-radius: 15px;
-            border: 3px solid var(--caramel-med);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .modal-header {
-            background: var(--mustard-bright);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            color: var(--choco-dark);
-            font-size: 1.2rem;
-        }
-
-        #close-modal {
-            background: transparent;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--choco-dark);
-            cursor: pointer;
-            box-shadow: none;
-            padding: 0;
-        }
-
-        .modal-body {
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .viewer-row {
-            padding: 15px;
-            border-radius: 8px;
-            text-align: left;
-            cursor: pointer;
-            border: 1px solid #eee;
-            transition: background 0.2s;
-        }
-
-        .viewer-row:hover { background: #f9f9f9; }
-        
-        .row-done { color: var(--caramel-med); background: var(--custard-pale); opacity: 0.7; }
-        .row-current { background: var(--orange-warm); color: white; border: 2px solid var(--choco-dark); font-weight: bold; }
-        .row-future { color: var(--choco-dark); }
-
-        #completion-message {
-            display: none;
-            font-size: 2rem;
-            color: var(--orange-warm);
-            font-weight: bold;
-            text-shadow: 1px 1px 0px var(--choco-dark);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CustardCrochet</title>
+  <style>
+    :root {
+      --custard: #FFF9E6; /* Pale custard yellow */
+      --caramel: #D49A6A; /* Medium caramel brown */
+      --chocolate: #4A2E1B; /* Dark chocolate brown */
+      --mustard: #E6B325; /* Bright mustard yellow */
+      --orange: #E87A5D; /* Warm orange */
+    }
+    body {
+      background-color: var(--custard);
+      color: var(--chocolate);
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: var(--chocolate);
+      font-weight: bold;
+    }
+    .import-section, .viewer-modal {
+      margin-top: 20px;
+      padding: 15px;
+      border: 2px solid var(--caramel);
+      background-color: white;
+      border-radius: 8px;
+    }
+    #done-btn {
+      background-color: var(--orange);
+      color: white;
+      font-size: 24px;
+      padding: 20px 40px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 6px 0 var(--caramel);
+      cursor: pointer;
+      margin: 20px 0;
+      transition: all 0.1s;
+    }
+    #done-btn:active {
+      box-shadow: 0 0 0 var(--caramel);
+      transform: translateY(6px);
+      background-color: var(--mustard);
+    }
+    .secondary-btn {
+      background-color: var(--caramel);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    #current-instruction { font-size: 24px; font-weight: bold; margin: 20px 0; }
+    #next-instruction { font-size: 14px; opacity: 0.8; }
+    
+    /* Pattern Viewer Modal */
+    #viewer-modal { display: none; text-align: left; max-height: 300px; overflow-y: auto; }
+    .viewer-row { padding: 8px; cursor: pointer; border-bottom: 1px solid var(--caramel); }
+    .row-done { color: var(--caramel); text-decoration: line-through; }
+    .row-current { background-color: var(--mustard); font-weight: bold; color: var(--chocolate); }
+    .row-future { color: var(--chocolate); }
+  </style>
 </head>
 <body>
 
-    <div id="app-title">CustardCrochet</div>
-    
-    <select id="project-selector"></select>
+  <h1>CustardCrochet</h1>
+  
+  <select id="projectSelect" class="secondary-btn"></select>
 
-    <div class="row-container" id="tracker-ui">
-        <div id="current-row-title">ROW 1</div>
-        <div id="current-instruction">Loading...</div>
-        <div id="current-notes"></div>
-        <div id="next-instruction">Next: ...</div>
-    </div>
+  <div id="import-section" class="import-section">
+    <h3 style="margin-top:0;">Add New Project</h3>
+    <textarea id="json-input" placeholder="Paste Gemini's JSON here..." style="width: 100%; height: 80px; margin-bottom:10px;"></textarea>
+    <button id="import-btn" class="secondary-btn" style="background-color: var(--mustard); color: var(--chocolate);">Import to App</button>
+  </div>
 
-    <div id="completion-message">Project Complete! 🎉</div>
+  <div>
+    <div id="current-instruction">Loading...</div>
+    <div id="next-instruction"></div>
+  </div>
 
-    <div class="controls-container" id="controls">
-        <button id="next-button">DONE WITH ROW</button>
-        <div class="secondary-controls">
-            <button class="btn-small" id="undo-button">↩ Undo</button>
-            <button class="btn-small" id="view-all-button">≡ View Pattern</button>
-        </div>
-    </div>
+  <button id="done-btn">NEXT ROW</button>
+  
+  <div>
+    <button id="undo-btn" class="secondary-btn">Undo</button>
+    <button id="view-btn" class="secondary-btn">View Pattern</button>
+  </div>
 
-    <div id="viewer-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span id="modal-project-name">Pattern Overview</span>
-                <button id="close-modal">✖</button>
-            </div>
-            <div class="modal-body" id="pattern-list"></div>
-        </div>
-    </div>
+  <div id="viewer-modal" class="viewer-modal">
+    <h3>Pattern Viewer</h3>
+    <div id="viewer-content"></div>
+    <button id="close-viewer" class="secondary-btn" style="width:100%; margin-top:10px;">Close</button>
+  </div>
 
-    <script>
-        // 1. The Multi-Project JSON Database
-        // When you generate new projects with me, just add them to this array!
-        const projectsDatabase = [
-            {
-                "projectId": "chunky-beanie-001",
-                "projectName": "Chunky Ribbed Beanie",
-                "totalRows": 4,
-                "pattern": [
-                    { "rowNumber": 1, "instruction": "Ch 40, hdc in 2nd ch from hook and across. (39 sts)", "notes": "Leave a long tail for sewing." },
-                    { "rowNumber": 2, "instruction": "Ch 1, turn. Hdc in back loop only (BLO) across. (39 sts)", "notes": "Keep tension loose." },
-                    { "rowNumber": 3, "instruction": "Repeat Row 2.", "notes": "" },
-                    { "rowNumber": 4, "instruction": "Sl st edges together to form a tube.", "notes": "Don't twist the fabric." }
-                ]
-            },
-            {
-                "projectId": "granny-square-001",
-                "projectName": "Classic Granny Square",
-                "totalRows": 3,
-                "pattern": [
-                    { "rowNumber": 1, "instruction": "Ch 3, 2 dc in ring, *ch 2, 3 dc in ring* rep 3 times, ch 2, sl st to top of ch 3.", "notes": "Magic ring alternative works here too." },
-                    { "rowNumber": 2, "instruction": "Ch 3, *(3 dc, ch 2, 3 dc) in next ch-2 corner sp* rep 3 times.", "notes": "Change colors here if desired." },
-                    { "rowNumber": 3, "instruction": "Ch 3, work corners as before, plus 3 dc in each side sp.", "notes": "Weave in ends as you go!" }
-                ]
-            }
-            {
-              "id": "spiderweb-bandana",
-              "name": "Spiderweb Bandana",
-              "pattern": [
-                { "row": "Start", "instruction": "Begin with a magic ring." },
-                { "row": "Row 1", "instruction": "Ch 2, place 10 dc into the mr. Pull the yarn tail tight to close the ring." },
-                { "row": "Row 2", "instruction": "Ch 2 and turn the work. 1 dc, (ch 3, 1 dc) * 8 times, 1 dc." },
-                { "row": "Row 3", "instruction": "Ch 2 and turn the work. 2 dc, (ch 4, 1 dc) * 8 times, 2 dc. (Remember: The 2 dc at the start and end are increases placed into the exact same stitch)." },
-                { "row": "Row 4", "instruction": "Ch 2 and turn the work. 2 dc, (ch 5, 1 dc) * 8 times, 2 dc." },
-                { "row": "Row 5", "instruction": "Ch 2 and turn the work. 2 dc, (ch 6, 1 dc) * 8 times, 2 dc." },
-                { "row": "Row 6", "instruction": "Ch 2 and turn the work. 2 dc, (ch 7, 1 dc) * 8 times, 2 dc." },
-                { "row": "Row 7", "instruction": "Ch 2 and turn the work. 2 dc, (ch 8, 1 dc) * 8 times, 2 dc." },
-                { "row": "Row 8", "instruction": "Ch 2 and turn the work. 2 dc, (ch 9, 1 dc) * 8 times, 2 dc." },
-                { "row": "Row 9", "instruction": "Ch 2 and turn the work. 2 dc, (ch 5, 1 dc, ch 5, 1 dc) * 8 times, 2 dc." },
-                { "row": "Row 10", "instruction": "Ch 2 and turn the work. 2 dc, (ch 5, 1 dc, ch 2, dc into the same st) * repeat 8 times, 2 dc." },
-                { "row": "Row 11", "instruction": "Ch 2 and turn the work. 2 dc, (ch 5, 1 dc, ch 3, 1 dc into the same st) * repeat 8 times, 2 dc." },
-                { "row": "Row 12", "instruction": "Ch 2 and turn the work. 2 dc, (ch 5, 1 dc, ch 4, 1 dc into the same st) * repeat 8 times, 2 dc." },
-                { "row": "Row 13", "instruction": "Ch 2 and turn the work. 2 dc, (ch 6, 1 dc, ch 5, 1 dc into the same st) * repeat 8 times, 2 dc." },
-                { "row": "Row 14", "instruction": "Ch 2 and turn the work. 2 sc, (ch 6, 1 dc, ch 7, 2 sc into the chain space, ch 5, 1 dc, ch 6, 1 sc) * repeat 8 times, 2 sc." }
-              ]
-            }
-        ];
+  <script>
+    // --- IMPORTANT: PASTE YOUR WEB APP URL HERE ---
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwug2NJVIlZupFqGzINmFXo0A3LWrKfW-8uVbwUXXYjOEEpyVKwfonJZrazS8MQYE8psw/exec"; 
 
-        // 2. State Management
-        let activeProject = projectsDatabase[0]; // Defaults to first project
-        let currentRowIndex = 0;
+    let projectsDatabase = JSON.parse(localStorage.getItem('cachedProjects')) || [];
+    let currentProjectIndex = 0;
+    let currentRow = 0;
 
-        // 3. UI Elements
-        const selectorEl = document.getElementById('project-selector');
-        const rowTitleEl = document.getElementById('current-row-title');
-        const instructionEl = document.getElementById('current-instruction');
-        const notesEl = document.getElementById('current-notes');
-        const nextInstructionEl = document.getElementById('next-instruction');
-        const trackerUI = document.getElementById('tracker-ui');
-        const controlsUI = document.getElementById('controls');
-        const completionMsg = document.getElementById('completion-message');
-        const modal = document.getElementById('viewer-modal');
-        const patternList = document.getElementById('pattern-list');
-        const modalProjectName = document.getElementById('modal-project-name');
+    // Elements
+    const projectSelect = document.getElementById('projectSelect');
+    const currentInstEl = document.getElementById('current-instruction');
+    const nextInstEl = document.getElementById('next-instruction');
+    const viewerModal = document.getElementById('viewer-modal');
+    const viewerContent = document.getElementById('viewer-content');
 
-        // 4. Core Functions
-        function initApp() {
-            // Populate the dropdown menu
-            projectsDatabase.forEach((proj, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.text = proj.projectName;
-                selectorEl.appendChild(option);
-            });
-            
-            loadProjectState();
-        }
+    // Initialization
+    function init() {
+      fetchProjects();
+      renderDropdown();
+    }
 
-        function loadProjectState() {
-            // Fetch the specific row for THIS project from local memory
-            currentRowIndex = parseInt(localStorage.getItem(activeProject.projectId + "_row")) || 0;
-            updateUI();
-        }
+    function fetchProjects() {
+      if(!WEB_APP_URL.includes("script.google.com")) return; // Skip if no URL
+      fetch(WEB_APP_URL)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            projectsDatabase = data;
+            localStorage.setItem('cachedProjects', JSON.stringify(projectsDatabase));
+            renderDropdown();
+          }
+        }).catch(err => console.log("Offline mode active."));
+    }
 
-        function syncToCloud() {
-            // Instantly update Local Storage
-            localStorage.setItem(activeProject.projectId + "_row", currentRowIndex);
-            
-            // Background sync to Google Sheets
-            const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyN-T_36ZpQRqKnmvHPfp6mXX4vzD26fiZUw8sBcPog0c22-OHTDHLSSrlpv7xuI_LLbg/exec"; 
-            if (GOOGLE_WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbyN-T_36ZpQRqKnmvHPfp6mXX4vzD26fiZUw8sBcPog0c22-OHTDHLSSrlpv7xuI_LLbg/exec") {
-                fetch(GOOGLE_WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ projectId: activeProject.projectId, row: currentRowIndex })
-                }).catch(err => console.error("Sync failed:", err));
-            }
-        }
+    function renderDropdown() {
+      projectSelect.innerHTML = "";
+      if (projectsDatabase.length === 0) {
+        currentInstEl.innerText = "No projects yet. Import one below!";
+        nextInstEl.innerText = "";
+        return;
+      }
+      projectsDatabase.forEach((proj, index) => {
+        let option = document.createElement('option');
+        option.value = index;
+        option.innerText = proj.name || `Project ${index + 1}`;
+        projectSelect.appendChild(option);
+      });
+      loadProject(0);
+    }
 
-        function updateUI() {
-            modalProjectName.innerText = activeProject.projectName;
+    function loadProject(index) {
+      if(projectsDatabase.length === 0) return;
+      currentProjectIndex = index;
+      const proj = projectsDatabase[currentProjectIndex];
+      // Load progress from local storage
+      currentRow = parseInt(localStorage.getItem(`progress_${proj.id}`)) || 0;
+      updateUI();
+    }
 
-            if (currentRowIndex >= activeProject.pattern.length) {
-                trackerUI.style.display = 'none';
-                document.getElementById('next-button').style.display = 'none';
-                completionMsg.style.display = 'block';
-            } else {
-                trackerUI.style.display = 'block';
-                document.getElementById('next-button').style.display = 'block';
-                completionMsg.style.display = 'none';
+    function updateUI() {
+      const proj = projectsDatabase[currentProjectIndex];
+      if (!proj || !proj.pattern) return;
 
-                const currentRow = activeProject.pattern[currentRowIndex];
-                const nextRow = activeProject.pattern[currentRowIndex + 1];
+      if (currentRow >= proj.pattern.length) {
+        currentInstEl.innerText = "Project Complete! 🎉";
+        nextInstEl.innerText = "";
+      } else {
+        currentInstEl.innerText = proj.pattern[currentRow];
+        nextInstEl.innerText = (currentRow + 1 < proj.pattern.length) ? "Next: " + proj.pattern[currentRow + 1] : "";
+      }
+      renderViewer();
+    }
 
-                rowTitleEl.innerText = `ROW ${currentRow.rowNumber} of ${activeProject.totalRows}`;
-                instructionEl.innerText = currentRow.instruction;
-                notesEl.innerText = currentRow.notes;
+    function saveProgress(row) {
+      const proj = projectsDatabase[currentProjectIndex];
+      if (!proj) return;
+      currentRow = row;
+      localStorage.setItem(`progress_${proj.id}`, currentRow);
+      updateUI();
 
-                if (nextRow) {
-                    nextInstructionEl.innerText = `Next Row (${nextRow.rowNumber}): ${nextRow.instruction}`;
-                } else {
-                    nextInstructionEl.innerText = "Next: Finish project!";
-                }
-            }
-            populateModal(); 
-        }
+      // Background sync to Google Sheets
+      if(WEB_APP_URL.includes("script.google.com")) {
+        fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: "updateProgress",
+            projectId: proj.id,
+            currentRow: currentRow
+          })
+        }).catch(e => console.log("Saved locally."));
+      }
+    }
 
-        function populateModal() {
-            patternList.innerHTML = ""; 
-            activeProject.pattern.forEach((row, index) => {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'viewer-row';
-                
-                if (index < currentRowIndex) rowDiv.classList.add('row-done');
-                else if (index === currentRowIndex) rowDiv.classList.add('row-current');
-                else rowDiv.classList.add('row-future');
+    // Event Listeners
+    projectSelect.addEventListener('change', (e) => loadProject(e.target.value));
 
-                rowDiv.innerHTML = `<strong>Row ${row.rowNumber}:</strong> ${row.instruction}`;
-                
-                rowDiv.addEventListener('click', () => {
-                    currentRowIndex = index;
-                    syncToCloud();
-                    updateUI();
-                    modal.style.display = "none";
-                });
+    document.getElementById('done-btn').addEventListener('click', () => {
+      const proj = projectsDatabase[currentProjectIndex];
+      if (proj && currentRow < proj.pattern.length) saveProgress(currentRow + 1);
+    });
 
-                patternList.appendChild(rowDiv);
-            });
-        }
+    document.getElementById('undo-btn').addEventListener('click', () => {
+      if (currentRow > 0) saveProgress(currentRow - 1);
+    });
 
-        // 5. Event Listeners
+    // Pattern Viewer Logic
+    document.getElementById('view-btn').addEventListener('click', () => viewerModal.style.display = 'block');
+    document.getElementById('close-viewer').addEventListener('click', () => viewerModal.style.display = 'none');
+
+    function renderViewer() {
+      const proj = projectsDatabase[currentProjectIndex];
+      if (!proj) return;
+      viewerContent.innerHTML = "";
+      proj.pattern.forEach((inst, index) => {
+        let div = document.createElement('div');
+        div.innerText = `${index + 1}. ${inst}`;
+        div.className = "viewer-row ";
         
-        // Handle Project Swapping
-        selectorEl.addEventListener('change', (e) => {
-            const selectedIndex = e.target.value;
-            activeProject = projectsDatabase[selectedIndex];
-            loadProjectState();
-        });
+        if (index < currentRow) div.className += "row-done";
+        else if (index === currentRow) div.className += "row-current";
+        else div.className += "row-future";
 
-        document.getElementById('next-button').addEventListener('click', () => {
-            currentRowIndex++;
-            syncToCloud();
-            updateUI();
-        });
+        div.onclick = () => {
+          saveProgress(index);
+          viewerModal.style.display = 'none';
+        };
+        viewerContent.appendChild(div);
+      });
+    }
 
-        document.getElementById('undo-button').addEventListener('click', () => {
-            if (currentRowIndex > 0) {
-                currentRowIndex--;
-                syncToCloud();
-                updateUI();
-            }
-        });
+    // Import Logic
+    document.getElementById('import-btn').addEventListener('click', () => {
+      const jsonText = document.getElementById('json-input').value;
+      try {
+        const newProject = JSON.parse(jsonText);
+        projectsDatabase.push(newProject);
+        localStorage.setItem('cachedProjects', JSON.stringify(projectsDatabase));
+        
+        if(WEB_APP_URL.includes("script.google.com")) {
+          fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: "addProject",
+              projectId: newProject.id || Date.now().toString(),
+              projectName: newProject.name || "New Project",
+              patternData: newProject
+            })
+          });
+        }
+        
+        alert("Project imported successfully!");
+        document.getElementById('json-input').value = "";
+        renderDropdown();
+      } catch (error) {
+        alert("Oops! Make sure you pasted the exact JSON block.");
+      }
+    });
 
-        document.getElementById('view-all-button').addEventListener('click', () => {
-            modal.style.display = "flex";
-            setTimeout(() => {
-                const currentEl = document.querySelector('.row-current');
-                if (currentEl) currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 10);
-        });
-
-        document.getElementById('close-modal').addEventListener('click', () => {
-            modal.style.display = "none";
-        });
-
-        // Start the app
-        initApp();
-    </script>
+    init();
+  </script>
 </body>
 </html>
