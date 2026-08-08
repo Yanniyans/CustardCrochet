@@ -32,8 +32,20 @@
             font-size: 2.5rem;
             font-weight: 900;
             color: var(--choco-dark);
-            margin: 40px 0 15px 0;
+            margin: 40px 0 5px 0;
             letter-spacing: 1px;
+        }
+
+        /* The Purin Sync Status */
+        #sync-status {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--caramel-med);
+            margin-bottom: 15px;
+            height: 20px; /* Keeps layout from jumping */
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            font-style: italic;
         }
 
         /* Top Right Add Button */
@@ -63,7 +75,7 @@
             gap: 10px;
             width: 100%;
             max-width: 400px;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
         }
 
         #project-selector {
@@ -158,6 +170,8 @@
         <button id="delete-project-btn" title="Delete Project">🗑️</button>
     </div>
 
+    <div id="sync-status"></div>
+
     <div id="no-projects-msg">No projects found. Click "+ New Pattern" to start!</div>
 
     <div class="row-container" id="tracker-ui" style="display:none;">
@@ -206,6 +220,7 @@
         const trackerUI = document.getElementById('tracker-ui');
         const controlsUI = document.getElementById('controls');
         const noProjectsMsg = document.getElementById('no-projects-msg');
+        const syncStatusEl = document.getElementById('sync-status');
         
         function initApp() {
             selectorEl.innerHTML = "";
@@ -288,11 +303,28 @@
             sendToGoogle({ action: "updateProgress", projectId: activeProject.projectId, row: currentRowIndex });
         }
 
+        // --- UPGRADED SYNC FUNCTION WITH PURINS ---
         function sendToGoogle(payload) {
-            const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyy9a_QE8gW_qXBpLF5LeOmmxSogtICq7sIY15-Ua9nQh7-xluUSe1hU_hHqywyNlP_dg/exec"; 
-            if (GOOGLE_WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbyy9a_QE8gW_qXBpLF5LeOmmxSogtICq7sIY15-Ua9nQh7-xluUSe1hU_hHqywyNlP_dg/exec") {
+            const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec"; 
+            
+            if (GOOGLE_WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec") {
+                // 1. Tell the user the sync is starting
+                syncStatusEl.innerText = "Consulting the Purins... 🍮";
+                syncStatusEl.style.opacity = 1;
+
                 fetch(GOOGLE_WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
-                .catch(err => console.error("Cloud Sync failed:", err));
+                .then(response => {
+                    // 2. Tell the user the sync was successful
+                    syncStatusEl.innerText = "The Purins have aggreed! ✨";
+                    // 3. Fade it out gently after 3 seconds
+                    setTimeout(() => { syncStatusEl.style.opacity = 0; }, 3000);
+                })
+                .catch(err => {
+                    // 4. Handle offline mode / errors gracefully
+                    console.error("Cloud Sync failed:", err);
+                    syncStatusEl.innerText = "The Purins are asleep (Saved to device only) 💤";
+                    setTimeout(() => { syncStatusEl.style.opacity = 0; }, 4000);
+                });
             }
         }
 
@@ -321,29 +353,25 @@
             }
         });
 
-        // --- BULLETPROOF IMPORT LOGIC ---
         document.getElementById('submit-import-btn').addEventListener('click', () => {
             const jsonText = document.getElementById('import-textarea').value;
             try {
                 const parsedData = JSON.parse(jsonText);
                 
-                // STRICT VALIDATION
                 if (!parsedData.projectId) throw new Error("Missing 'projectId'.");
                 if (!parsedData.projectName) throw new Error("Missing 'projectName'.");
                 if (!parsedData.totalRows) throw new Error("Missing 'totalRows'.");
                 if (!parsedData.pattern || !Array.isArray(parsedData.pattern)) throw new Error("Missing 'pattern' array.");
 
-                // Check if project already exists
                 const existingIndex = projectsDatabase.findIndex(p => p.projectId === parsedData.projectId);
                 if (existingIndex > -1) {
-                    projectsDatabase[existingIndex] = parsedData; // Overwrite
+                    projectsDatabase[existingIndex] = parsedData; 
                 } else {
-                    projectsDatabase.push(parsedData); // Add new
+                    projectsDatabase.push(parsedData); 
                 }
 
                 localStorage.setItem("custard_projects", JSON.stringify(projectsDatabase));
                 
-                // Send to Google Sheets
                 sendToGoogle({
                     action: "addProject",
                     projectId: parsedData.projectId,
@@ -356,7 +384,6 @@
                 initApp();
                 
             } catch (error) {
-                // IT WILL NOW SCREAM AT YOU IF IT FAILS
                 alert("IMPORT FAILED: " + error.message + "\n\nPlease check that you copied the JSON exactly.");
             }
         });
