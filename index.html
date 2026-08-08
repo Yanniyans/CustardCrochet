@@ -6,11 +6,11 @@
   <title>CustardCrochet</title>
   <style>
     :root {
-      --custard: #FFF9E6; /* Pale custard yellow */
-      --caramel: #D49A6A; /* Medium caramel brown */
-      --chocolate: #4A2E1B; /* Dark chocolate brown */
-      --mustard: #E6B325; /* Bright mustard yellow */
-      --orange: #E87A5D; /* Warm orange */
+      --custard: #FFF9E6; 
+      --caramel: #D49A6A; 
+      --chocolate: #4A2E1B; 
+      --mustard: #E6B325; 
+      --orange: #E87A5D; 
     }
     body {
       background-color: var(--custard);
@@ -18,11 +18,33 @@
       font-family: sans-serif;
       text-align: center;
       padding: 20px;
+      margin: 0;
     }
     h1 {
       color: var(--chocolate);
       font-weight: bold;
+      margin-top: 40px;
     }
+    
+    /* Top Right Add Button */
+    #toggle-import-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background-color: var(--mustard);
+      color: var(--chocolate);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--caramel);
+    }
+    #toggle-import-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 0 0 var(--caramel);
+    }
+
     .import-section, .viewer-modal {
       margin-top: 20px;
       padding: 15px;
@@ -30,6 +52,12 @@
       background-color: white;
       border-radius: 8px;
     }
+    
+    /* Hidden by default */
+    #import-section {
+      display: none; 
+    }
+
     #done-btn {
       background-color: var(--orange);
       color: white;
@@ -56,10 +84,24 @@
       cursor: pointer;
       margin: 5px;
     }
+    
+    /* Delete Button */
+    #delete-btn {
+      background-color: var(--orange);
+      padding: 10px 12px;
+    }
+
+    .project-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
     #current-instruction { font-size: 24px; font-weight: bold; margin: 20px 0; }
     #next-instruction { font-size: 14px; opacity: 0.8; }
     
-    /* Pattern Viewer Modal */
     #viewer-modal { display: none; text-align: left; max-height: 300px; overflow-y: auto; }
     .viewer-row { padding: 8px; cursor: pointer; border-bottom: 1px solid var(--caramel); }
     .row-done { color: var(--caramel); text-decoration: line-through; }
@@ -69,13 +111,18 @@
 </head>
 <body>
 
+  <button id="toggle-import-btn">+ New Pattern</button>
+
   <h1>CustardCrochet</h1>
   
-  <select id="projectSelect" class="secondary-btn"></select>
+  <div class="project-controls">
+    <select id="projectSelect" class="secondary-btn"></select>
+    <button id="delete-btn" class="secondary-btn" title="Delete Project">🗑️</button>
+  </div>
 
   <div id="import-section" class="import-section">
     <h3 style="margin-top:0;">Add New Project</h3>
-    <textarea id="json-input" placeholder="Paste Gemini's JSON here..." style="width: 100%; height: 80px; margin-bottom:10px;"></textarea>
+    <textarea id="json-input" placeholder="Paste clean JSON here..." style="width: 100%; height: 80px; margin-bottom:10px;"></textarea>
     <button id="import-btn" class="secondary-btn" style="background-color: var(--mustard); color: var(--chocolate);">Import to App</button>
   </div>
 
@@ -99,27 +146,26 @@
 
   <script>
     // --- IMPORTANT: PASTE YOUR WEB APP URL HERE ---
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxWBM9QxQg5aLUYuvXJ21T1RUJb0U5t56GrEp6sN-wGbaTTRIfW1L9D0KnvKc85JKTTQ/exec"; 
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyy9a_QE8gW_qXBpLF5LeOmmxSogtICq7sIY15-Ua9nQh7-xluUSe1hU_hHqywyNlP_dg/exec"; 
 
     let projectsDatabase = JSON.parse(localStorage.getItem('cachedProjects')) || [];
     let currentProjectIndex = 0;
     let currentRow = 0;
 
-    // Elements
     const projectSelect = document.getElementById('projectSelect');
     const currentInstEl = document.getElementById('current-instruction');
     const nextInstEl = document.getElementById('next-instruction');
     const viewerModal = document.getElementById('viewer-modal');
     const viewerContent = document.getElementById('viewer-content');
+    const importSection = document.getElementById('import-section');
 
-    // Initialization
     function init() {
       fetchProjects();
       renderDropdown();
     }
 
     function fetchProjects() {
-      if(!WEB_APP_URL.includes("script.google.com")) return; // Skip if no URL
+      if(!WEB_APP_URL.includes("script.google.com")) return;
       fetch(WEB_APP_URL)
         .then(res => res.json())
         .then(data => {
@@ -134,7 +180,7 @@
     function renderDropdown() {
       projectSelect.innerHTML = "";
       if (projectsDatabase.length === 0) {
-        currentInstEl.innerText = "No projects yet. Import one below!";
+        currentInstEl.innerText = "No projects yet. Add one in the top right!";
         nextInstEl.innerText = "";
         return;
       }
@@ -144,14 +190,19 @@
         option.innerText = proj.name || `Project ${index + 1}`;
         projectSelect.appendChild(option);
       });
-      loadProject(0);
+      
+      // Ensure index is valid after a deletion
+      if (currentProjectIndex >= projectsDatabase.length) {
+        currentProjectIndex = 0;
+      }
+      loadProject(currentProjectIndex);
     }
 
     function loadProject(index) {
       if(projectsDatabase.length === 0) return;
       currentProjectIndex = index;
       const proj = projectsDatabase[currentProjectIndex];
-      // Load progress from local storage
+      projectSelect.value = currentProjectIndex;
       currentRow = parseInt(localStorage.getItem(`progress_${proj.id}`)) || 0;
       updateUI();
     }
@@ -177,7 +228,6 @@
       localStorage.setItem(`progress_${proj.id}`, currentRow);
       updateUI();
 
-      // Background sync to Google Sheets
       if(WEB_APP_URL.includes("script.google.com")) {
         fetch(WEB_APP_URL, {
           method: 'POST',
@@ -190,7 +240,8 @@
       }
     }
 
-    // Event Listeners
+    // --- EVENT LISTENERS ---
+
     projectSelect.addEventListener('change', (e) => loadProject(e.target.value));
 
     document.getElementById('done-btn').addEventListener('click', () => {
@@ -202,9 +253,42 @@
       if (currentRow > 0) saveProgress(currentRow - 1);
     });
 
-    // Pattern Viewer Logic
     document.getElementById('view-btn').addEventListener('click', () => viewerModal.style.display = 'block');
     document.getElementById('close-viewer').addEventListener('click', () => viewerModal.style.display = 'none');
+
+    // Toggle Import Window
+    document.getElementById('toggle-import-btn').addEventListener('click', () => {
+      if (importSection.style.display === 'none' || importSection.style.display === '') {
+        importSection.style.display = 'block';
+      } else {
+        importSection.style.display = 'none';
+      }
+    });
+
+    // Delete Project Logic
+    document.getElementById('delete-btn').addEventListener('click', () => {
+      const proj = projectsDatabase[currentProjectIndex];
+      if (!proj) return;
+      
+      const confirmDelete = confirm(`Are you sure you want to delete "${proj.name}"?`);
+      if (confirmDelete) {
+        // Remove from Google Sheets
+        if(WEB_APP_URL.includes("script.google.com")) {
+          fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "deleteProject", projectId: proj.id })
+          });
+        }
+        
+        // Clean up Local Storage
+        localStorage.removeItem(`progress_${proj.id}`);
+        projectsDatabase.splice(currentProjectIndex, 1);
+        localStorage.setItem('cachedProjects', JSON.stringify(projectsDatabase));
+        
+        // Refresh UI
+        renderDropdown();
+      }
+    });
 
     function renderViewer() {
       const proj = projectsDatabase[currentProjectIndex];
@@ -249,7 +333,12 @@
         
         alert("Project imported successfully!");
         document.getElementById('json-input').value = "";
+        importSection.style.display = 'none'; // Hide menu after successful import
         renderDropdown();
+        
+        // Auto-select the newly added project
+        loadProject(projectsDatabase.length - 1);
+        
       } catch (error) {
         alert("Oops! Make sure you pasted the exact JSON block.");
       }
