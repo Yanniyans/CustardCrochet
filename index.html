@@ -307,10 +307,10 @@
         // --- UPGRADED SYNC FUNCTION WITH STRICT DEBUGGING ---
         function sendToGoogle(payload) {
             // Put your URL right here!
-            const GOOGLE_WEB_APP_URL = "PASTE_YOUR_COPIED_URL_HERE"; 
+            const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec"; 
             
             // If the URL is still the placeholder, SCREAM at the user
-            if (GOOGLE_WEB_APP_URL === "PASTE_YOUR_COPIED_URL_HERE" || GOOGLE_WEB_APP_URL === "") {
+            if (GOOGLE_WEB_APP_URL === "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec" || GOOGLE_WEB_APP_URL === "") {
                 alert("⚠️ WARNING: The app is trying to sync, but the Google URL is missing! Check line 289.");
                 return; // Stop the function completely
             }
