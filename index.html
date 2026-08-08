@@ -1,350 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CustardCrochet</title>
-  <style>
-    :root {
-      --custard: #FFF9E6; 
-      --caramel: #D49A6A; 
-      --chocolate: #4A2E1B; 
-      --mustard: #E6B325; 
-      --orange: #E87A5D; 
-    }
-    body {
-      background-color: var(--custard);
-      color: var(--chocolate);
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-      margin: 0;
-    }
-    h1 {
-      color: var(--chocolate);
-      font-weight: bold;
-      margin-top: 40px;
-    }
-    
-    /* Top Right Add Button */
-    #toggle-import-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background-color: var(--mustard);
-      color: var(--chocolate);
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 3px 0 var(--caramel);
-    }
-    #toggle-import-btn:active {
-      transform: translateY(3px);
-      box-shadow: 0 0 0 var(--caramel);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustardCrochet</title>
+    <style>
+        /* Your Custom Color Palette */
+        :root {
+            --custard-pale: #FDF5B7;
+            --caramel-med: #9E6C47;
+            --choco-dark: #4B2F1D;
+            --mustard-bright: #F3D248;
+            --orange-warm: #EBA142;
+            --danger-red: #E07A5F;
+        }
 
-    .import-section, .viewer-modal {
-      margin-top: 20px;
-      padding: 15px;
-      border: 2px solid var(--caramel);
-      background-color: white;
-      border-radius: 8px;
-    }
-    
-    /* Hidden by default */
-    #import-section {
-      display: none; 
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--custard-pale);
+            color: var(--choco-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            margin: 0;
+            position: relative;
+        }
 
-    #done-btn {
-      background-color: var(--orange);
-      color: white;
-      font-size: 24px;
-      padding: 20px 40px;
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 6px 0 var(--caramel);
-      cursor: pointer;
-      margin: 20px 0;
-      transition: all 0.1s;
-    }
-    #done-btn:active {
-      box-shadow: 0 0 0 var(--caramel);
-      transform: translateY(6px);
-      background-color: var(--mustard);
-    }
-    .secondary-btn {
-      background-color: var(--caramel);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin: 5px;
-    }
-    
-    /* Delete Button */
-    #delete-btn {
-      background-color: var(--orange);
-      padding: 10px 12px;
-    }
+        #app-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--choco-dark);
+            margin: 40px 0 15px 0;
+            letter-spacing: 1px;
+        }
 
-    .project-controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+        /* Top Right Add Button */
+        #open-import-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: var(--mustard-bright);
+            color: var(--choco-dark);
+            border: 2px solid var(--caramel-med);
+            padding: 10px 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 var(--caramel-med);
+            transition: all 0.1s;
+        }
 
-    #current-instruction { font-size: 24px; font-weight: bold; margin: 20px 0; }
-    #next-instruction { font-size: 14px; opacity: 0.8; }
-    
-    #viewer-modal { display: none; text-align: left; max-height: 300px; overflow-y: auto; }
-    .viewer-row { padding: 8px; cursor: pointer; border-bottom: 1px solid var(--caramel); }
-    .row-done { color: var(--caramel); text-decoration: line-through; }
-    .row-current { background-color: var(--mustard); font-weight: bold; color: var(--chocolate); }
-    .row-future { color: var(--chocolate); }
-  </style>
+        #open-import-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 0 0 var(--caramel-med);
+        }
+
+        /* Project Selector Area */
+        .project-header-area {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 25px;
+        }
+
+        #project-selector {
+            flex: 1;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--choco-dark);
+            background-color: white;
+            border: 3px solid var(--caramel-med);
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #delete-project-btn {
+            background-color: var(--danger-red);
+            color: white;
+            border: 3px solid #C25E45;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* Main UI */
+        .row-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid var(--caramel-med);
+            box-shadow: 0 6px 12px rgba(75, 47, 29, 0.15);
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 25px;
+            box-sizing: border-box;
+        }
+
+        #current-row-title { font-weight: bold; color: var(--orange-warm); font-size: 1.2rem; text-transform: uppercase; }
+        #current-instruction { font-size: 1.8rem; font-weight: bold; margin: 15px 0; line-height: 1.3; color: var(--choco-dark); }
+        #current-notes { font-style: italic; color: var(--caramel-med); margin-bottom: 20px; }
+        #next-instruction { font-size: 1rem; color: var(--caramel-med); border-top: 1px dashed var(--caramel-med); padding-top: 15px; opacity: 0.9; }
+
+        /* Buttons */
+        .controls-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        .secondary-controls { display: flex; gap: 15px; width: 100%; }
+        
+        button { border: none; border-radius: 50px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: all 0.1s; }
+        
+        #next-button { background-color: var(--orange-warm); color: var(--choco-dark); padding: 20px; font-size: 1.5rem; box-shadow: 0 6px 0 var(--caramel-med); width: 100%; }
+        #next-button:active { transform: translateY(6px); box-shadow: 0 0 0 var(--caramel-med); background-color: var(--mustard-bright); }
+        
+        .btn-small { flex: 1; padding: 15px; font-size: 1rem; background-color: var(--custard-pale); color: var(--choco-dark); border: 2px solid var(--caramel-med); box-shadow: 0 4px 0 var(--caramel-med); }
+        .btn-small:active { transform: translateY(4px); box-shadow: 0 0 0 var(--caramel-med); background-color: white; }
+
+        /* Modals (Import & Viewer) */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(75, 47, 29, 0.9); z-index: 1000; justify-content: center; align-items: center;
+        }
+
+        .modal-content {
+            background: white; width: 90%; max-width: 500px; max-height: 80vh;
+            border-radius: 15px; border: 3px solid var(--caramel-med); display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .modal-header { background: var(--mustard-bright); padding: 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.2rem; }
+        .close-modal-btn { background: transparent; border: none; font-size: 1.5rem; color: var(--choco-dark); box-shadow: none; padding: 0; }
+        .modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+
+        textarea { width: 100%; height: 200px; border: 2px solid var(--caramel-med); border-radius: 8px; padding: 10px; font-family: monospace; resize: none; box-sizing: border-box; }
+        
+        #submit-import-btn { background-color: var(--orange-warm); color: var(--choco-dark); padding: 15px; font-size: 1.2rem; margin-top: 10px; box-shadow: 0 4px 0 var(--caramel-med); }
+        #submit-import-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--caramel-med); }
+
+        /* Viewer Rows */
+        .viewer-row { padding: 15px; border-radius: 8px; text-align: left; cursor: pointer; border: 1px solid #eee; }
+        .row-done { color: var(--caramel-med); background: var(--custard-pale); opacity: 0.7; }
+        .row-current { background: var(--orange-warm); color: white; border: 2px solid var(--choco-dark); font-weight: bold; }
+        .row-future { color: var(--choco-dark); }
+
+        #completion-message { display: none; font-size: 2rem; color: var(--orange-warm); font-weight: bold; text-shadow: 1px 1px 0px var(--choco-dark); }
+        #no-projects-msg { font-size: 1.2rem; font-weight: bold; color: var(--caramel-med); margin-top: 50px; }
+    </style>
 </head>
 <body>
 
-  <button id="toggle-import-btn">+ New Pattern</button>
+    <button id="open-import-btn">+ New Pattern</button>
+    <div id="app-title">CustardCrochet</div>
+    
+    <div class="project-header-area" id="header-area" style="display:none;">
+        <select id="project-selector"></select>
+        <button id="delete-project-btn" title="Delete Project">🗑️</button>
+    </div>
 
-  <h1>CustardCrochet</h1>
-  
-  <div class="project-controls">
-    <select id="projectSelect" class="secondary-btn"></select>
-    <button id="delete-btn" class="secondary-btn" title="Delete Project">🗑️</button>
-  </div>
+    <div id="no-projects-msg">No projects found. Click "+ New Pattern" to start!</div>
 
-  <div id="import-section" class="import-section">
-    <h3 style="margin-top:0;">Add New Project</h3>
-    <textarea id="json-input" placeholder="Paste clean JSON here..." style="width: 100%; height: 80px; margin-bottom:10px;"></textarea>
-    <button id="import-btn" class="secondary-btn" style="background-color: var(--mustard); color: var(--chocolate);">Import to App</button>
-  </div>
+    <div class="row-container" id="tracker-ui" style="display:none;">
+        <div id="current-row-title">ROW 1</div>
+        <div id="current-instruction">Loading...</div>
+        <div id="current-notes"></div>
+        <div id="next-instruction">Next: ...</div>
+    </div>
 
-  <div>
-    <div id="current-instruction">Loading...</div>
-    <div id="next-instruction"></div>
-  </div>
+    <div id="completion-message">Project Complete! 🎉</div>
 
-  <button id="done-btn">NEXT ROW</button>
-  
-  <div>
-    <button id="undo-btn" class="secondary-btn">Undo</button>
-    <button id="view-btn" class="secondary-btn">View Pattern</button>
-  </div>
+    <div class="controls-container" id="controls" style="display:none;">
+        <button id="next-button">DONE WITH ROW</button>
+        <div class="secondary-controls">
+            <button class="btn-small" id="undo-button">↩ Undo</button>
+            <button class="btn-small" id="view-all-button">≡ View Pattern</button>
+        </div>
+    </div>
 
-  <div id="viewer-modal" class="viewer-modal">
-    <h3>Pattern Viewer</h3>
-    <div id="viewer-content"></div>
-    <button id="close-viewer" class="secondary-btn" style="width:100%; margin-top:10px;">Close</button>
-  </div>
+    <div id="viewer-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><span id="modal-project-name">Pattern Overview</span><button class="close-modal-btn" onclick="document.getElementById('viewer-modal').style.display='none'">✖</button></div>
+            <div class="modal-body" id="pattern-list"></div>
+        </div>
+    </div>
 
-  <script>
-    // --- IMPORTANT: PASTE YOUR WEB APP URL HERE ---
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyy9a_QE8gW_qXBpLF5LeOmmxSogtICq7sIY15-Ua9nQh7-xluUSe1hU_hHqywyNlP_dg/exec"; 
+    <div id="import-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><span>Import JSON Pattern</span><button class="close-modal-btn" onclick="document.getElementById('import-modal').style.display='none'">✖</button></div>
+            <div class="modal-body">
+                <textarea id="import-textarea" placeholder="Paste your generated JSON here..."></textarea>
+                <button id="submit-import-btn">IMPORT PROJECT</button>
+            </div>
+        </div>
+    </div>
 
-    let projectsDatabase = JSON.parse(localStorage.getItem('cachedProjects')) || [];
-    let currentProjectIndex = 0;
-    let currentRow = 0;
+    <script>
+        // --- CORE DATABASE ---
+        let projectsDatabase = JSON.parse(localStorage.getItem("custard_projects")) || [];
+        let activeProject = null;
+        let currentRowIndex = 0;
 
-    const projectSelect = document.getElementById('projectSelect');
-    const currentInstEl = document.getElementById('current-instruction');
-    const nextInstEl = document.getElementById('next-instruction');
-    const viewerModal = document.getElementById('viewer-modal');
-    const viewerContent = document.getElementById('viewer-content');
-    const importSection = document.getElementById('import-section');
+        // --- DOM ELEMENTS ---
+        const selectorEl = document.getElementById('project-selector');
+        const headerArea = document.getElementById('header-area');
+        const trackerUI = document.getElementById('tracker-ui');
+        const controlsUI = document.getElementById('controls');
+        const noProjectsMsg = document.getElementById('no-projects-msg');
+        
+        function initApp() {
+            selectorEl.innerHTML = "";
+            if (projectsDatabase.length === 0) {
+                headerArea.style.display = 'none';
+                trackerUI.style.display = 'none';
+                controlsUI.style.display = 'none';
+                noProjectsMsg.style.display = 'block';
+                return;
+            }
 
-    function init() {
-      fetchProjects();
-      renderDropdown();
-    }
-
-    function fetchProjects() {
-      if(!WEB_APP_URL.includes("script.google.com")) return;
-      fetch(WEB_APP_URL)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.length > 0) {
-            projectsDatabase = data;
-            localStorage.setItem('cachedProjects', JSON.stringify(projectsDatabase));
-            renderDropdown();
-          }
-        }).catch(err => console.log("Offline mode active."));
-    }
-
-    function renderDropdown() {
-      projectSelect.innerHTML = "";
-      if (projectsDatabase.length === 0) {
-        currentInstEl.innerText = "No projects yet. Add one in the top right!";
-        nextInstEl.innerText = "";
-        return;
-      }
-      projectsDatabase.forEach((proj, index) => {
-        let option = document.createElement('option');
-        option.value = index;
-        option.innerText = proj.name || `Project ${index + 1}`;
-        projectSelect.appendChild(option);
-      });
-      
-      // Ensure index is valid after a deletion
-      if (currentProjectIndex >= projectsDatabase.length) {
-        currentProjectIndex = 0;
-      }
-      loadProject(currentProjectIndex);
-    }
-
-    function loadProject(index) {
-      if(projectsDatabase.length === 0) return;
-      currentProjectIndex = index;
-      const proj = projectsDatabase[currentProjectIndex];
-      projectSelect.value = currentProjectIndex;
-      currentRow = parseInt(localStorage.getItem(`progress_${proj.id}`)) || 0;
-      updateUI();
-    }
-
-    function updateUI() {
-      const proj = projectsDatabase[currentProjectIndex];
-      if (!proj || !proj.pattern) return;
-
-      if (currentRow >= proj.pattern.length) {
-        currentInstEl.innerText = "Project Complete! 🎉";
-        nextInstEl.innerText = "";
-      } else {
-        currentInstEl.innerText = proj.pattern[currentRow];
-        nextInstEl.innerText = (currentRow + 1 < proj.pattern.length) ? "Next: " + proj.pattern[currentRow + 1] : "";
-      }
-      renderViewer();
-    }
-
-    function saveProgress(row) {
-      const proj = projectsDatabase[currentProjectIndex];
-      if (!proj) return;
-      currentRow = row;
-      localStorage.setItem(`progress_${proj.id}`, currentRow);
-      updateUI();
-
-      if(WEB_APP_URL.includes("script.google.com")) {
-        fetch(WEB_APP_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: "updateProgress",
-            projectId: proj.id,
-            currentRow: currentRow
-          })
-        }).catch(e => console.log("Saved locally."));
-      }
-    }
-
-    // --- EVENT LISTENERS ---
-
-    projectSelect.addEventListener('change', (e) => loadProject(e.target.value));
-
-    document.getElementById('done-btn').addEventListener('click', () => {
-      const proj = projectsDatabase[currentProjectIndex];
-      if (proj && currentRow < proj.pattern.length) saveProgress(currentRow + 1);
-    });
-
-    document.getElementById('undo-btn').addEventListener('click', () => {
-      if (currentRow > 0) saveProgress(currentRow - 1);
-    });
-
-    document.getElementById('view-btn').addEventListener('click', () => viewerModal.style.display = 'block');
-    document.getElementById('close-viewer').addEventListener('click', () => viewerModal.style.display = 'none');
-
-    // Toggle Import Window
-    document.getElementById('toggle-import-btn').addEventListener('click', () => {
-      if (importSection.style.display === 'none' || importSection.style.display === '') {
-        importSection.style.display = 'block';
-      } else {
-        importSection.style.display = 'none';
-      }
-    });
-
-    // Delete Project Logic
-    document.getElementById('delete-btn').addEventListener('click', () => {
-      const proj = projectsDatabase[currentProjectIndex];
-      if (!proj) return;
-      
-      const confirmDelete = confirm(`Are you sure you want to delete "${proj.name}"?`);
-      if (confirmDelete) {
-        // Remove from Google Sheets
-        if(WEB_APP_URL.includes("script.google.com")) {
-          fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "deleteProject", projectId: proj.id })
-          });
+            noProjectsMsg.style.display = 'none';
+            headerArea.style.display = 'flex';
+            
+            projectsDatabase.forEach((proj, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.text = proj.projectName;
+                selectorEl.appendChild(option);
+            });
+            
+            activeProject = projectsDatabase[0];
+            loadProjectState();
         }
-        
-        // Clean up Local Storage
-        localStorage.removeItem(`progress_${proj.id}`);
-        projectsDatabase.splice(currentProjectIndex, 1);
-        localStorage.setItem('cachedProjects', JSON.stringify(projectsDatabase));
-        
-        // Refresh UI
-        renderDropdown();
-      }
-    });
 
-    function renderViewer() {
-      const proj = projectsDatabase[currentProjectIndex];
-      if (!proj) return;
-      viewerContent.innerHTML = "";
-      proj.pattern.forEach((inst, index) => {
-        let div = document.createElement('div');
-        div.innerText = `${index + 1}. ${inst}`;
-        div.className = "viewer-row ";
-        
-        if (index < currentRow) div.className += "row-done";
-        else if (index === currentRow) div.className += "row-current";
-        else div.className += "row-future";
-
-        div.onclick = () => {
-          saveProgress(index);
-          viewerModal.style.display = 'none';
-        };
-        viewerContent.appendChild(div);
-      });
-    }
-
-    // Import Logic
-    document.getElementById('import-btn').addEventListener('click', () => {
-      const jsonText = document.getElementById('json-input').value;
-      try {
-        const newProject = JSON.parse(jsonText);
-        projectsDatabase.push(newProject);
-        localStorage.setItem('cachedProjects', JSON.stringify(projectsDatabase));
-        
-        if(WEB_APP_URL.includes("script.google.com")) {
-          fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-              action: "addProject",
-              projectId: newProject.id || Date.now().toString(),
-              projectName: newProject.name || "New Project",
-              patternData: newProject
-            })
-          });
+        function loadProjectState() {
+            if(!activeProject) return;
+            currentRowIndex = parseInt(localStorage.getItem(activeProject.projectId + "_row")) || 0;
+            updateUI();
         }
-        
-        alert("Project imported successfully!");
-        document.getElementById('json-input').value = "";
-        importSection.style.display = 'none'; // Hide menu after successful import
-        renderDropdown();
-        
-        // Auto-select the newly added project
-        loadProject(projectsDatabase.length - 1);
-        
-      } catch (error) {
-        alert("Oops! Make sure you pasted the exact JSON block.");
-      }
-    });
 
-    init();
-  </script>
+        function updateUI() {
+            if(!activeProject) return;
+            document.getElementById('modal-project-name').innerText = activeProject.projectName;
+
+            if (currentRowIndex >= activeProject.pattern.length) {
+                trackerUI.style.display = 'none';
+                document.getElementById('next-button').style.display = 'none';
+                document.getElementById('completion-message').style.display = 'block';
+                controlsUI.style.display = 'flex';
+            } else {
+                trackerUI.style.display = 'block';
+                document.getElementById('next-button').style.display = 'block';
+                document.getElementById('completion-message').style.display = 'none';
+                controlsUI.style.display = 'flex';
+
+                const currentRow = activeProject.pattern[currentRowIndex];
+                const nextRow = activeProject.pattern[currentRowIndex + 1];
+
+                document.getElementById('current-row-title').innerText = `ROW ${currentRow.rowNumber} of ${activeProject.totalRows}`;
+                document.getElementById('current-instruction').innerText = currentRow.instruction;
+                document.getElementById('current-notes').innerText = currentRow.notes || "";
+                document.getElementById('next-instruction').innerText = nextRow ? `Next Row (${nextRow.rowNumber}): ${nextRow.instruction}` : "Next: Finish project!";
+            }
+            populateModal(); 
+        }
+
+        function populateModal() {
+            const patternList = document.getElementById('pattern-list');
+            patternList.innerHTML = ""; 
+            activeProject.pattern.forEach((row, index) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'viewer-row';
+                if (index < currentRowIndex) rowDiv.classList.add('row-done');
+                else if (index === currentRowIndex) rowDiv.classList.add('row-current');
+                else rowDiv.classList.add('row-future');
+                rowDiv.innerHTML = `<strong>Row ${row.rowNumber}:</strong> ${row.instruction}`;
+                rowDiv.addEventListener('click', () => {
+                    currentRowIndex = index;
+                    syncProgress();
+                    updateUI();
+                    document.getElementById('viewer-modal').style.display = "none";
+                });
+                patternList.appendChild(rowDiv);
+            });
+        }
+
+        function syncProgress() {
+            localStorage.setItem(activeProject.projectId + "_row", currentRowIndex);
+            sendToGoogle({ action: "updateProgress", projectId: activeProject.projectId, row: currentRowIndex });
+        }
+
+        function sendToGoogle(payload) {
+            const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyy9a_QE8gW_qXBpLF5LeOmmxSogtICq7sIY15-Ua9nQh7-xluUSe1hU_hHqywyNlP_dg/exec"; 
+            if (GOOGLE_WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbyy9a_QE8gW_qXBpLF5LeOmmxSogtICq7sIY15-Ua9nQh7-xluUSe1hU_hHqywyNlP_dg/exec") {
+                fetch(GOOGLE_WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
+                .catch(err => console.error("Cloud Sync failed:", err));
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        selectorEl.addEventListener('change', (e) => {
+            activeProject = projectsDatabase[e.target.value];
+            loadProjectState();
+        });
+
+        document.getElementById('next-button').addEventListener('click', () => { currentRowIndex++; syncProgress(); updateUI(); });
+        document.getElementById('undo-button').addEventListener('click', () => { if (currentRowIndex > 0) { currentRowIndex--; syncProgress(); updateUI(); } });
+        document.getElementById('view-all-button').addEventListener('click', () => { 
+            document.getElementById('viewer-modal').style.display = "flex";
+            setTimeout(() => { const currentEl = document.querySelector('.row-current'); if (currentEl) currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 10);
+        });
+
+        document.getElementById('open-import-btn').addEventListener('click', () => { document.getElementById('import-modal').style.display = 'flex'; });
+
+        document.getElementById('delete-project-btn').addEventListener('click', () => {
+            if(confirm(`Are you sure you want to delete "${activeProject.projectName}"?`)) {
+                sendToGoogle({ action: "deleteProject", projectId: activeProject.projectId });
+                localStorage.removeItem(activeProject.projectId + "_row");
+                projectsDatabase = projectsDatabase.filter(p => p.projectId !== activeProject.projectId);
+                localStorage.setItem("custard_projects", JSON.stringify(projectsDatabase));
+                initApp();
+            }
+        });
+
+        // --- BULLETPROOF IMPORT LOGIC ---
+        document.getElementById('submit-import-btn').addEventListener('click', () => {
+            const jsonText = document.getElementById('import-textarea').value;
+            try {
+                const parsedData = JSON.parse(jsonText);
+                
+                // STRICT VALIDATION
+                if (!parsedData.projectId) throw new Error("Missing 'projectId'.");
+                if (!parsedData.projectName) throw new Error("Missing 'projectName'.");
+                if (!parsedData.totalRows) throw new Error("Missing 'totalRows'.");
+                if (!parsedData.pattern || !Array.isArray(parsedData.pattern)) throw new Error("Missing 'pattern' array.");
+
+                // Check if project already exists
+                const existingIndex = projectsDatabase.findIndex(p => p.projectId === parsedData.projectId);
+                if (existingIndex > -1) {
+                    projectsDatabase[existingIndex] = parsedData; // Overwrite
+                } else {
+                    projectsDatabase.push(parsedData); // Add new
+                }
+
+                localStorage.setItem("custard_projects", JSON.stringify(projectsDatabase));
+                
+                // Send to Google Sheets
+                sendToGoogle({
+                    action: "addProject",
+                    projectId: parsedData.projectId,
+                    projectName: parsedData.projectName,
+                    patternJSON: JSON.stringify(parsedData)
+                });
+
+                document.getElementById('import-textarea').value = "";
+                document.getElementById('import-modal').style.display = 'none';
+                initApp();
+                
+            } catch (error) {
+                // IT WILL NOW SCREAM AT YOU IF IT FAILS
+                alert("IMPORT FAILED: " + error.message + "\n\nPlease check that you copied the JSON exactly.");
+            }
+        });
+
+        initApp();
+    </script>
 </body>
 </html>
