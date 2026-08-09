@@ -26,7 +26,7 @@
         
         /* Header & Hopper */
         header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
-        select, button, textarea { padding: 10px; font-size: 16px; border-radius: 8px; border: 2px solid var(--caramel); color: var(--dark-brown); background-color: white; }
+        select, button, textarea, input { padding: 10px; font-size: 16px; border-radius: 8px; border: 2px solid var(--caramel); color: var(--dark-brown); background-color: white; }
         select { flex: 1; font-weight: bold; cursor: pointer; }
         
         /* Delete Button */
@@ -42,7 +42,8 @@
         textarea { resize: vertical; font-family: monospace; font-size: 14px; border: 2px solid var(--caramel); }
         .action-btn { background-color: var(--caramel); color: white; border: none; cursor: pointer; font-weight: bold; flex: 1;}
         .action-btn:hover { filter: brightness(0.9); }
-        .btn-row { display: flex; gap: 10px; }
+        .danger-btn { background-color: #d9534f; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
         
         /* Main Instruction Display */
         .instruction-box { width: 100%; max-width: 400px; background: white; padding: 30px 20px; border-radius: 12px; border: 2px solid var(--caramel); box-shadow: 0 4px 8px rgba(75, 45, 27, 0.15); text-align: center; margin-bottom: 30px; box-sizing: border-box; }
@@ -52,6 +53,11 @@
         .project-note { font-size: 14px; background: var(--yellow); padding: 8px; border-radius: 6px; margin-bottom: 15px; border: 1px dashed var(--caramel); text-align: left; }
         .row-note { font-size: 15px; font-style: italic; color: #666; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
         .note-label { font-weight: bold; color: var(--caramel); font-style: normal; display: block; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; }
+
+        /* Dashboard Styles */
+        .dash-item { display: flex; flex-direction: column; gap: 5px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fcfcfc; margin-bottom: 10px;}
+        .dash-item-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
+        .dash-item input[type="number"] { width: 60px; padding: 5px; }
 
         /* Main Buttons */
         .button-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
@@ -92,7 +98,9 @@
     <div class="collapsible-section">
         <div class="btn-row">
             <button class="toggle-btn" onclick="toggleMenu('import-tools')">➕ Add Pattern</button>
-            <button class="toggle-btn" onclick="toggleMenu('notes-tools')">📝 Manage Notes</button>
+            <button class="toggle-btn" onclick="toggleMenu('notes-tools')">✏️ Quick Note</button>
+            <button class="toggle-btn" onclick="openNotesDashboard()">🗂️ Notes Dashboard</button>
+            <button id="notes-visibility-btn" class="toggle-btn" onclick="toggleNotesVisibility()">👁️ Hide Notes</button>
         </div>
 
         <div id="import-tools" class="tool-panel hidden">
@@ -103,9 +111,15 @@
         <div id="notes-tools" class="tool-panel hidden">
             <textarea id="note-input" rows="3" placeholder="Type a reminder or pattern adjustment here..."></textarea>
             <div class="btn-row">
-                <button class="action-btn" onclick="saveNote('row')">Save to Current Row</button>
-                <button class="action-btn" onclick="saveNote('project')">Save to Project</button>
+                <button class="action-btn" onclick="saveQuickNote('row')">Save to Current Row</button>
+                <button class="action-btn" onclick="saveQuickNote('project')">Save to Project</button>
             </div>
+        </div>
+
+        <div id="notes-dashboard" class="tool-panel hidden">
+            <h3 style="margin-top:0;">Notes Dashboard</h3>
+            <div id="dashboard-content"></div>
+            <button class="action-btn" style="background:var(--dark-brown);" onclick="toggleMenu('notes-dashboard')">Close Dashboard</button>
         </div>
     </div>
 
@@ -137,8 +151,8 @@
         let activeProject = null;
         let currentRowIndex = 0;
         let historyStack = [];
+        let showNotesOnMain = true; // State for toggling notes visibility
 
-        // Ensure progress object is formatted correctly
         function getProgressObj(id) {
             if (!allProgress[id]) {
                 allProgress[id] = { currentRow: 0, projectNotes: "", rowNotes: {} };
@@ -220,11 +234,10 @@
             if (!activeProject) return;
             const pData = getProgressObj(activeProject.projectId);
             
-            // 1. Instruction Text
             const currentInst = activeProject.instructions[currentRowIndex] || "🎉 Project Complete!";
             document.getElementById("current-instruction").innerText = currentInst;
 
-            // 2. Project Notes Logic
+            // Project Notes Logic
             const jsonProjNote = activeProject.projectNote || "";
             const userProjNote = pData.projectNotes || "";
             let finalProjNote = "";
@@ -233,9 +246,10 @@
             
             const projNoteEl = document.getElementById("current-project-note");
             projNoteEl.innerHTML = finalProjNote.trim();
-            projNoteEl.classList.toggle("hidden", finalProjNote.trim() === "");
+            // Hide if empty OR if the user toggled notes off
+            projNoteEl.classList.toggle("hidden", finalProjNote.trim() === "" || !showNotesOnMain);
 
-            // 3. Row Notes Logic
+            // Row Notes Logic
             const jsonRowNote = activeProject.rowNotes ? activeProject.rowNotes[currentRowIndex] : null;
             const userRowNote = pData.rowNotes ? pData.rowNotes[currentRowIndex] : null;
             let finalRowNote = "";
@@ -244,9 +258,10 @@
             
             const rowNoteEl = document.getElementById("current-row-note");
             rowNoteEl.innerHTML = finalRowNote.trim();
-            rowNoteEl.classList.toggle("hidden", finalRowNote.trim() === "");
+            // Hide if empty OR if the user toggled notes off
+            rowNoteEl.classList.toggle("hidden", finalRowNote.trim() === "" || !showNotesOnMain);
 
-            // 4. Pattern Overview List
+            // Pattern Overview List
             const listEl = document.getElementById("instruction-list");
             listEl.innerHTML = "";
             activeProject.instructions.forEach((inst, index) => {
@@ -261,6 +276,14 @@
             });
 
             document.getElementById("undo-button").disabled = (historyStack.length === 0);
+        }
+
+        // Toggle visibility of notes on the main screen
+        function toggleNotesVisibility() {
+            showNotesOnMain = !showNotesOnMain;
+            const btn = document.getElementById("notes-visibility-btn");
+            btn.innerText = showNotesOnMain ? "👁️ Hide Notes" : "👁️ Show Notes";
+            renderUI();
         }
 
         function setSyncStatus(message) {
@@ -330,8 +353,92 @@
             syncProgressToSheets(pData);
         }
 
-        // New Note Logic
-        function saveNote(type) {
+        // --- NOTES DASHBOARD LOGIC ---
+
+        function openNotesDashboard() {
+            toggleMenu('notes-dashboard', true);
+            renderNotesDashboard();
+        }
+
+        function renderNotesDashboard() {
+            if (!activeProject) return;
+            const pData = getProgressObj(activeProject.projectId);
+            const dash = document.getElementById("dashboard-content");
+            const maxRow = activeProject.instructions.length - 1;
+
+            let html = `<div class="dash-item">
+                <div class="dash-item-header">Project Note</div>
+                <textarea id="dash-proj-note" rows="2">${pData.projectNotes || ""}</textarea>
+                <button class="action-btn" onclick="dashSaveProjectNote()">Save Project Note</button>
+            </div>`;
+
+            html += `<h4 style="margin-bottom:5px;">Row Notes</h4>`;
+            
+            const rowKeys = Object.keys(pData.rowNotes).sort((a,b) => parseInt(a) - parseInt(b));
+            if(rowKeys.length === 0) {
+                html += `<p style="font-size:14px; color:#666;">No row notes saved yet.</p>`;
+            }
+
+            rowKeys.forEach(row => {
+                html += `<div class="dash-item">
+                    <div class="dash-item-header">
+                        <label>Row Index:</label>
+                        <input type="number" id="dash-row-num-${row}" value="${row}" min="0" max="${maxRow}">
+                    </div>
+                    <textarea id="dash-row-text-${row}" rows="2">${pData.rowNotes[row]}</textarea>
+                    <div class="btn-row">
+                        <button class="action-btn" onclick="dashSaveRowNote('${row}')">Save/Move</button>
+                        <button class="action-btn danger-btn" onclick="dashDeleteRowNote('${row}')">Delete</button>
+                    </div>
+                </div>`;
+            });
+
+            dash.innerHTML = html;
+        }
+
+        function dashSaveProjectNote() {
+            const text = document.getElementById("dash-proj-note").value.trim();
+            const pData = getProgressObj(activeProject.projectId);
+            pData.projectNotes = text;
+            
+            finalizeNoteAction(pData);
+        }
+
+        function dashSaveRowNote(oldRowIndex) {
+            const newRowIndex = document.getElementById(`dash-row-num-${oldRowIndex}`).value;
+            const text = document.getElementById(`dash-row-text-${oldRowIndex}`).value.trim();
+            const pData = getProgressObj(activeProject.projectId);
+
+            if (text === "") {
+                delete pData.rowNotes[oldRowIndex]; // Delete if they erased the text
+            } else {
+                if (oldRowIndex !== newRowIndex) {
+                    delete pData.rowNotes[oldRowIndex]; // Remove from old spot
+                }
+                pData.rowNotes[newRowIndex] = text; // Save to new spot
+            }
+
+            finalizeNoteAction(pData);
+            renderNotesDashboard(); // Re-render to sort inputs
+        }
+
+        function dashDeleteRowNote(rowIndex) {
+            const pData = getProgressObj(activeProject.projectId);
+            delete pData.rowNotes[rowIndex];
+            
+            finalizeNoteAction(pData);
+            renderNotesDashboard(); 
+        }
+
+        function finalizeNoteAction(pData) {
+            saveToLocalMemory();
+            renderUI();
+            setSyncStatus("Syncing dashboard to purins...");
+            syncProgressToSheets(pData);
+        }
+
+        // --- QUICK NOTE LOGIC ---
+        function saveQuickNote(type) {
             const inputField = document.getElementById("note-input");
             const noteText = inputField.value.trim();
             if (!activeProject) return;
@@ -350,18 +457,29 @@
 
             saveToLocalMemory();
             renderUI();
-            
             inputField.value = "";
-            toggleMenu('notes-tools'); // Hide menu after saving
+            toggleMenu('notes-tools'); 
             
-            setSyncStatus("Syncing notes to purins...");
+            setSyncStatus("Syncing note to purins...");
             syncProgressToSheets(pData);
         }
 
         // Universal Menu Toggle
-        function toggleMenu(menuId) {
+        function toggleMenu(menuId, forceOpen = false) {
             const menu = document.getElementById(menuId);
-            menu.classList.toggle("hidden");
+            
+            // Auto-close other tools to prevent screen clutter
+            if (['import-tools', 'notes-tools', 'notes-dashboard'].includes(menuId)) {
+                ['import-tools', 'notes-tools', 'notes-dashboard'].forEach(id => {
+                    if (id !== menuId) document.getElementById(id).classList.add("hidden");
+                });
+            }
+
+            if(forceOpen) {
+                menu.classList.remove("hidden");
+            } else {
+                menu.classList.toggle("hidden");
+            }
             
             if(menuId === "overview-container") {
                 const btn = document.getElementById("overview-toggle-btn");
