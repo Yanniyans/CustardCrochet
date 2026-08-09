@@ -70,8 +70,11 @@
         #undo-button:hover { filter: brightness(0.95); }
         #undo-button:disabled { opacity: 0.5; cursor: not-allowed; }
         
+        /* Sync Status Note */
+        .sync-status { text-align: center; font-size: 14px; font-style: italic; font-weight: bold; color: var(--caramel); margin: 0; min-height: 20px; }
+
         /* Pattern Overview */
-        .all-instructions { width: 100%; max-width: 400px; margin-top: 30px; text-align: left; }
+        .all-instructions { width: 100%; max-width: 400px; margin-top: 20px; text-align: left; }
         .done { text-decoration: line-through; opacity: 0.5; }
         .hidden { display: none !important; }
     </style>
@@ -97,7 +100,8 @@
 
     <div class="button-group">
         <button id="next-button" onclick="nextRow()" disabled>Next Row</button>
-        <button id="undo-button" onclick="undoRow()">Undo Previous Row</button>
+        <button id="undo-button" onclick="undoRow()" disabled>Undo Previous Row</button>
+        <p id="sync-status" class="sync-status"></p>
     </div>
 
     <div class="all-instructions">
@@ -174,18 +178,32 @@
             document.getElementById("undo-button").disabled = (historyStack.length === 0);
         }
 
-        // The Lightning-Fast Next Button
+        // Helper function for the purins status note
+        function setSyncStatus(message) {
+            const statusEl = document.getElementById("sync-status");
+            statusEl.innerText = message;
+            
+            // Clear the success message after 2 seconds so it doesn't linger forever
+            if (message === "The purins have agreed!") {
+                setTimeout(() => {
+                    if (statusEl.innerText === "The purins have agreed!") {
+                        statusEl.innerText = "";
+                    }
+                }, 2000);
+            }
+        }
+
+        // The Unfrozen, Lightning-Fast Next Button
         function nextRow() {
             if (currentRowIndex < activeProject.instructions.length) {
-                // 1. Instantly update the local memory and screen (Optimistic Update)
+                // 1. Instantly update the local memory and screen
                 historyStack.push(currentRowIndex);
                 currentRowIndex++;
                 allProgress[activeProject.projectId] = currentRowIndex;
                 renderUI(); 
 
-                // 2. Silently sync to Google Sheets in the background
-                const button = document.getElementById("next-button");
-                button.innerText = "Consulting the purins..."; 
+                // 2. Silently sync to Google Sheets without freezing the buttons
+                setSyncStatus("Consulting the purins..."); 
                 
                 fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
@@ -197,37 +215,26 @@
                 })
                 .then(response => response.json())
                 .then(result => {
-                    if (result.status === "saved") {
-                        button.innerText = "The purins have agreed!";
-                        
-                        // Revert text back to normal after 2 seconds
-                        setTimeout(() => { 
-                            if (button.innerText === "The purins have agreed!") {
-                                button.innerText = "Next Row"; 
-                            }
-                        }, 2000);
-                    }
+                    if (result.status === "saved") setSyncStatus("The purins have agreed!");
                 })
                 .catch(error => {
                     console.error("Sync error:", error);
-                    button.innerText = "Next Row (Offline)";
+                    setSyncStatus("Offline mode - Saved locally!");
                 });
             }
         }
 
-        // The Lightning-Fast Undo Button
+        // The Unfrozen, Lightning-Fast Undo Button
         function undoRow() {
             if (historyStack.length > 0) {
-                // 1. Instantly update the local memory and screen (Optimistic Update)
+                // 1. Instantly update the local memory and screen
                 const prevRowIndex = historyStack.pop();
                 currentRowIndex = prevRowIndex;
                 allProgress[activeProject.projectId] = currentRowIndex;
                 renderUI();
 
-                // 2. Silently sync the reverted state to Google Sheets
-                const button = document.getElementById("undo-button");
-                button.innerText = "Consulting the purins...";
-                button.disabled = true; // Briefly disable so you don't double-undo too fast
+                // 2. Silently sync the reverted state to Google Sheets without freezing
+                setSyncStatus("Consulting the purins...");
 
                 fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
@@ -239,22 +246,11 @@
                 })
                 .then(response => response.json())
                 .then(result => {
-                    if (result.status === "saved") {
-                        button.innerText = "The purins have agreed!";
-                        button.disabled = false;
-                        
-                        // Revert text back to normal after 2 seconds
-                        setTimeout(() => {
-                            if (button.innerText === "The purins have agreed!") {
-                                button.innerText = "Undo Previous Row";
-                            }
-                        }, 2000);
-                    }
+                    if (result.status === "saved") setSyncStatus("The purins have agreed!");
                 })
                 .catch(error => {
                     console.error("Undo failed to sync:", error);
-                    button.innerText = "Undo (Offline)";
-                    button.disabled = false;
+                    setSyncStatus("Offline mode - Saved locally!");
                 });
             }
         }
