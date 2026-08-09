@@ -47,6 +47,7 @@
         
         /* Main Instruction Display */
         .instruction-box { width: 100%; max-width: 400px; background: white; padding: 30px 20px; border-radius: 12px; border: 2px solid var(--caramel); box-shadow: 0 4px 8px rgba(75, 45, 27, 0.15); text-align: center; margin-bottom: 30px; box-sizing: border-box; }
+        .row-counter { font-size: 13px; font-weight: bold; color: var(--caramel); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
         #current-instruction { font-size: 24px; font-weight: bold; margin: 0; line-height: 1.4; color: var(--dark-brown); }
         
         /* Note Displays */
@@ -125,6 +126,7 @@
 
     <div class="instruction-box">
         <div id="current-project-note" class="project-note hidden"></div>
+        <div id="row-counter" class="row-counter"></div>
         <p id="current-instruction">Checking device memory...</p>
         <div id="current-row-note" class="row-note hidden"></div>
     </div>
@@ -151,7 +153,7 @@
         let activeProject = null;
         let currentRowIndex = 0;
         let historyStack = [];
-        let showNotesOnMain = true; // State for toggling notes visibility
+        let showNotesOnMain = true; 
 
         function getProgressObj(id) {
             if (!allProgress[id]) {
@@ -206,6 +208,7 @@
                 document.getElementById("current-instruction").innerText = "Tap 'Add Pattern' to get started!";
                 document.getElementById("delete-button").disabled = true;
                 document.getElementById("next-button").disabled = true;
+                document.getElementById("row-counter").classList.add("hidden");
                 return;
             }
             document.getElementById("delete-button").disabled = false;
@@ -233,11 +236,22 @@
         function renderUI() {
             if (!activeProject) return;
             const pData = getProgressObj(activeProject.projectId);
+            const totalRows = activeProject.instructions.length;
             
+            // 1. Row Counter Update
+            const counterEl = document.getElementById("row-counter");
+            if (currentRowIndex < totalRows) {
+                counterEl.innerText = `Row ${currentRowIndex + 1} / ${totalRows}`;
+                counterEl.classList.remove("hidden");
+            } else {
+                counterEl.classList.add("hidden");
+            }
+
+            // 2. Instruction Text
             const currentInst = activeProject.instructions[currentRowIndex] || "🎉 Project Complete!";
             document.getElementById("current-instruction").innerText = currentInst;
 
-            // Project Notes Logic
+            // 3. Project Notes Logic
             const jsonProjNote = activeProject.projectNote || "";
             const userProjNote = pData.projectNotes || "";
             let finalProjNote = "";
@@ -246,10 +260,9 @@
             
             const projNoteEl = document.getElementById("current-project-note");
             projNoteEl.innerHTML = finalProjNote.trim();
-            // Hide if empty OR if the user toggled notes off
             projNoteEl.classList.toggle("hidden", finalProjNote.trim() === "" || !showNotesOnMain);
 
-            // Row Notes Logic
+            // 4. Row Notes Logic
             const jsonRowNote = activeProject.rowNotes ? activeProject.rowNotes[currentRowIndex] : null;
             const userRowNote = pData.rowNotes ? pData.rowNotes[currentRowIndex] : null;
             let finalRowNote = "";
@@ -258,10 +271,9 @@
             
             const rowNoteEl = document.getElementById("current-row-note");
             rowNoteEl.innerHTML = finalRowNote.trim();
-            // Hide if empty OR if the user toggled notes off
             rowNoteEl.classList.toggle("hidden", finalRowNote.trim() === "" || !showNotesOnMain);
 
-            // Pattern Overview List
+            // 5. Pattern Overview List
             const listEl = document.getElementById("instruction-list");
             listEl.innerHTML = "";
             activeProject.instructions.forEach((inst, index) => {
@@ -278,7 +290,6 @@
             document.getElementById("undo-button").disabled = (historyStack.length === 0);
         }
 
-        // Toggle visibility of notes on the main screen
         function toggleNotesVisibility() {
             showNotesOnMain = !showNotesOnMain;
             const btn = document.getElementById("notes-visibility-btn");
@@ -353,8 +364,6 @@
             syncProgressToSheets(pData);
         }
 
-        // --- NOTES DASHBOARD LOGIC ---
-
         function openNotesDashboard() {
             toggleMenu('notes-dashboard', true);
             renderNotesDashboard();
@@ -400,7 +409,6 @@
             const text = document.getElementById("dash-proj-note").value.trim();
             const pData = getProgressObj(activeProject.projectId);
             pData.projectNotes = text;
-            
             finalizeNoteAction(pData);
         }
 
@@ -410,22 +418,21 @@
             const pData = getProgressObj(activeProject.projectId);
 
             if (text === "") {
-                delete pData.rowNotes[oldRowIndex]; // Delete if they erased the text
+                delete pData.rowNotes[oldRowIndex]; 
             } else {
                 if (oldRowIndex !== newRowIndex) {
-                    delete pData.rowNotes[oldRowIndex]; // Remove from old spot
+                    delete pData.rowNotes[oldRowIndex]; 
                 }
-                pData.rowNotes[newRowIndex] = text; // Save to new spot
+                pData.rowNotes[newRowIndex] = text; 
             }
 
             finalizeNoteAction(pData);
-            renderNotesDashboard(); // Re-render to sort inputs
+            renderNotesDashboard(); 
         }
 
         function dashDeleteRowNote(rowIndex) {
             const pData = getProgressObj(activeProject.projectId);
             delete pData.rowNotes[rowIndex];
-            
             finalizeNoteAction(pData);
             renderNotesDashboard(); 
         }
@@ -437,7 +444,6 @@
             syncProgressToSheets(pData);
         }
 
-        // --- QUICK NOTE LOGIC ---
         function saveQuickNote(type) {
             const inputField = document.getElementById("note-input");
             const noteText = inputField.value.trim();
@@ -464,11 +470,9 @@
             syncProgressToSheets(pData);
         }
 
-        // Universal Menu Toggle
         function toggleMenu(menuId, forceOpen = false) {
             const menu = document.getElementById(menuId);
             
-            // Auto-close other tools to prevent screen clutter
             if (['import-tools', 'notes-tools', 'notes-dashboard'].includes(menuId)) {
                 ['import-tools', 'notes-tools', 'notes-dashboard'].forEach(id => {
                     if (id !== menuId) document.getElementById(id).classList.add("hidden");
