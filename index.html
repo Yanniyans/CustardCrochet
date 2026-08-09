@@ -75,7 +75,21 @@
 
         /* Pattern Overview */
         .all-instructions { width: 100%; max-width: 400px; margin-top: 20px; text-align: left; }
+        
+        /* Clickable List Items */
+        #instruction-list { list-style-type: none; padding: 0; }
+        #instruction-list li { 
+            padding: 8px 12px; 
+            margin-bottom: 5px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: background-color 0.2s, transform 0.1s; 
+            border: 1px solid transparent;
+        }
+        #instruction-list li:hover { background-color: rgba(152, 104, 67, 0.1); border-color: rgba(152, 104, 67, 0.3); }
+        #instruction-list li:active { transform: scale(0.98); }
         .done { text-decoration: line-through; opacity: 0.5; }
+        .active-row { font-weight: bold; color: var(--orange); background-color: rgba(234, 163, 64, 0.1); border-color: var(--orange) !important; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -95,7 +109,7 @@
     </div>
 
     <div class="instruction-box">
-        <p id="current-instruction">Fetching your projects from Google Sheets...</p>
+        <p id="current-instruction">Checking device memory...</p>
     </div>
 
     <div class="button-group">
@@ -119,15 +133,45 @@
         let currentRowIndex = 0;
         let historyStack = [];
 
+        // Helper to save to local memory instantly
+        function saveToLocalMemory() {
+            localStorage.setItem("custardProjects", JSON.stringify(allProjects));
+            localStorage.setItem("custardProgress", JSON.stringify(allProgress));
+        }
+
         async function initApp() {
+            // 1. INSTANT BOOT: Try loading from local device storage first
+            const cachedProjects = localStorage.getItem("custardProjects");
+            const cachedProgress = localStorage.getItem("custardProgress");
+
+            if (cachedProjects && cachedProgress) {
+                allProjects = JSON.parse(cachedProjects);
+                allProgress = JSON.parse(cachedProgress);
+                populateHopper();
+                setSyncStatus("Loaded locally. Checking purins...");
+            } else {
+                document.getElementById("current-instruction").innerText = "Fetching your projects from Google Sheets for the first time...";
+            }
+
+            // 2. BACKGROUND SYNC: Check Google Sheets silently to ensure it's up to date
             try {
                 const response = await fetch(GOOGLE_WEB_APP_URL);
                 const data = await response.json();
                 allProjects = data.projects;
                 allProgress = data.progress;
-                populateHopper();
+                
+                // Update local memory with the freshest data
+                saveToLocalMemory();
+                
+                // Refresh UI in case data changed from another device
+                populateHopper(); 
+                setSyncStatus("Sync complete!");
             } catch (error) {
-                document.getElementById("current-instruction").innerText = "Could not connect to Google Sheets.";
+                if (!cachedProjects) {
+                    document.getElementById("current-instruction").innerText = "Could not connect to Google Sheets.";
+                } else {
+                    setSyncStatus("Offline mode. Using local data.");
+                }
             }
         }
 
@@ -138,6 +182,7 @@
                 hopper.innerHTML = "<option>No Projects Found</option>";
                 document.getElementById("current-instruction").innerText = "Tap 'Add New Pattern' to get started!";
                 document.getElementById("delete-button").disabled = true;
+                document.getElementById("next-button").disabled = true;
                 return;
             }
             document.getElementById("delete-button").disabled = false;
@@ -171,47 +216,45 @@
             activeProject.instructions.forEach((inst, index) => {
                 const li = document.createElement("li");
                 li.innerText = inst;
+                
+                li.onclick = () => jumpToRow(index);
+                
                 if (index < currentRowIndex) li.className = "done";
+                if (index === currentRowIndex) li.classList.add("active-row");
+                
                 listEl.appendChild(li);
             });
 
             document.getElementById("undo-button").disabled = (historyStack.length === 0);
         }
 
-        // Helper function for the purins status note
         function setSyncStatus(message) {
             const statusEl = document.getElementById("sync-status");
             statusEl.innerText = message;
             
-            // Clear the success message after 2 seconds so it doesn't linger forever
-            if (message === "The purins have agreed!") {
+            if (message === "The purins have agreed!" || message === "Sync complete!") {
                 setTimeout(() => {
-                    if (statusEl.innerText === "The purins have agreed!") {
+                    if (statusEl.innerText === message) {
                         statusEl.innerText = "";
                     }
                 }, 2000);
             }
         }
 
-        // The Unfrozen, Lightning-Fast Next Button
         function nextRow() {
             if (currentRowIndex < activeProject.instructions.length) {
-                // 1. Instantly update the local memory and screen
                 historyStack.push(currentRowIndex);
                 currentRowIndex++;
                 allProgress[activeProject.projectId] = currentRowIndex;
+                
+                saveToLocalMemory(); // Save instantly to device
                 renderUI(); 
 
-                // 2. Silently sync to Google Sheets without freezing the buttons
                 setSyncStatus("Consulting the purins..."); 
                 
                 fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
-                    body: JSON.stringify({ 
-                        action: "updateProgress", 
-                        projectId: activeProject.projectId, 
-                        newRow: currentRowIndex 
-                    })
+                    body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: currentRowIndex })
                 })
                 .then(response => response.json())
                 .then(result => {
@@ -224,25 +267,20 @@
             }
         }
 
-        // The Unfrozen, Lightning-Fast Undo Button
         function undoRow() {
             if (historyStack.length > 0) {
-                // 1. Instantly update the local memory and screen
                 const prevRowIndex = historyStack.pop();
                 currentRowIndex = prevRowIndex;
                 allProgress[activeProject.projectId] = currentRowIndex;
+                
+                saveToLocalMemory(); // Save instantly to device
                 renderUI();
 
-                // 2. Silently sync the reverted state to Google Sheets without freezing
                 setSyncStatus("Consulting the purins...");
 
                 fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
-                    body: JSON.stringify({ 
-                        action: "updateProgress", 
-                        projectId: activeProject.projectId, 
-                        newRow: prevRowIndex 
-                    })
+                    body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: prevRowIndex })
                 })
                 .then(response => response.json())
                 .then(result => {
@@ -255,7 +293,32 @@
             }
         }
 
-        // Toggle the JSON Input Box
+        function jumpToRow(targetIndex) {
+            if (targetIndex === currentRowIndex) return;
+
+            historyStack.push(currentRowIndex); 
+            currentRowIndex = targetIndex;
+            allProgress[activeProject.projectId] = currentRowIndex;
+            
+            saveToLocalMemory(); // Save instantly to device
+            renderUI();
+
+            setSyncStatus("Consulting the purins...");
+
+            fetch(GOOGLE_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: currentRowIndex })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === "saved") setSyncStatus("The purins have agreed!");
+            })
+            .catch(error => {
+                console.error("Jump failed to sync:", error);
+                setSyncStatus("Offline mode - Saved locally!");
+            });
+        }
+
         function toggleImport() {
             const tools = document.getElementById("import-tools");
             tools.classList.toggle("hidden");
@@ -273,20 +336,25 @@
                 button.innerText = "Importing...";
                 button.disabled = true;
 
+                // Optimistically add to local memory so you can start right away!
+                allProjects.push(newProject);
+                saveToLocalMemory();
+                populateHopper();
+                document.getElementById("project-hopper").value = newProject.projectId;
+                switchProject();
+                inputField.value = ""; 
+                toggleImport(); 
+
+                setSyncStatus("Sending pattern to the purins...");
+
                 const response = await fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
                     body: JSON.stringify({ action: "addProject", ...newProject })
                 });
                 
                 const result = await response.json();
-                if(result.status === "project_added") {
-                    allProjects.push(newProject);
-                    populateHopper();
-                    document.getElementById("project-hopper").value = newProject.projectId;
-                    switchProject();
-                    inputField.value = ""; 
-                    toggleImport(); // Hide the box after successful import
-                }
+                if(result.status === "project_added") setSyncStatus("The purins have accepted your pattern!");
+
             } catch (err) {
                 alert("Oops! The text you pasted isn't valid JSON, or there was a connection error.");
             } finally {
@@ -295,7 +363,6 @@
             }
         }
 
-        // Delete Project Logic
         async function deleteProject() {
             if (!activeProject) return;
             
@@ -305,6 +372,14 @@
             const button = document.getElementById("delete-button");
             button.innerText = "Deleting...";
             button.disabled = true;
+            
+            // Delete locally first for speed
+            allProjects = allProjects.filter(p => p.projectId !== activeProject.projectId);
+            delete allProgress[activeProject.projectId];
+            saveToLocalMemory();
+            populateHopper(); 
+
+            setSyncStatus("Asking purins to delete...");
 
             try {
                 const response = await fetch(GOOGLE_WEB_APP_URL, {
@@ -313,13 +388,9 @@
                 });
                 
                 const result = await response.json();
-                if(result.status === "project_deleted") {
-                    allProjects = allProjects.filter(p => p.projectId !== activeProject.projectId);
-                    delete allProgress[activeProject.projectId];
-                    populateHopper(); 
-                }
+                if(result.status === "project_deleted") setSyncStatus("Deleted!");
             } catch (err) {
-                alert("Failed to delete the project. Please check your connection.");
+                alert("Failed to delete the project from Google Sheets. It may reappear on other devices.");
             } finally {
                 button.innerText = "🗑️ Delete";
                 button.disabled = false;
