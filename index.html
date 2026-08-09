@@ -5,353 +5,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CustardCrochet</title>
     <style>
-        :root {
-            --custard: #FDF8E1;
-            --caramel: #D48C4A;
-            --chocolate: #4A2E15;
-            --mustard: #F4C430;
-            --orange: #E67E22;
-        }
-        body {
-            background-color: var(--custard);
-            color: var(--chocolate);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: var(--chocolate);
-            font-size: 2.5em;
-            margin-bottom: 5px;
-        }
-        #syncStatus {
-            font-size: 0.9em;
-            color: var(--caramel);
-            margin-bottom: 20px;
-            font-style: italic;
-            height: 20px;
-        }
-        .header-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        select {
-            padding: 10px;
-            font-size: 1em;
-            border: 2px solid var(--caramel);
-            border-radius: 8px;
-            background-color: white;
-            color: var(--chocolate);
-        }
-        button {
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .icon-btn {
-            background-color: var(--caramel);
-            color: white;
-            padding: 10px 15px;
-        }
-        .icon-btn.danger {
-            background-color: #d9534f;
-        }
-        #importSection {
-            background-color: white;
-            border: 2px dashed var(--caramel);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 0 auto 20px auto;
-            max-width: 400px;
-            display: none;
-        }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin-bottom: 10px;
-            border: 1px solid var(--caramel);
-        }
-        #patternDisplay {
-            background-color: white;
-            border: 2px solid var(--caramel);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 0 auto 20px auto;
-            max-width: 400px;
-            min-height: 120px;
-        }
-        .instruction {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .notes {
-            font-size: 1em;
-            color: var(--caramel);
-        }
-        .giant-btn {
-            background-color: var(--orange);
-            color: white;
-            font-size: 2em;
-            padding: 20px 40px;
-            border-radius: 15px;
-            box-shadow: 0 6px var(--caramel);
-            transition: all 0.1s;
-            margin-bottom: 20px;
-            width: 90%;
-            max-width: 400px;
-        }
-        .giant-btn:active {
-            background-color: var(--mustard);
-            box-shadow: 0 0 var(--caramel);
-            transform: translateY(6px);
-        }
-        .secondary-controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        .secondary-btn {
-            background-color: var(--chocolate);
-            color: white;
-            padding: 10px 20px;
-        }
-        /* Pattern Viewer Modal */
-        #viewerModal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(74, 46, 21, 0.8);
-        }
-        .modal-content {
-            background-color: var(--custard);
-            margin: 10% auto;
-            padding: 20px;
-            border: 3px solid var(--caramel);
-            border-radius: 12px;
-            width: 80%;
-            max-width: 500px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-        .viewer-row {
-            padding: 10px;
-            margin-bottom: 5px;
-            border-bottom: 1px solid var(--caramel);
-            cursor: pointer;
-            text-align: left;
-        }
-        .viewer-row.finished { color: var(--caramel); text-decoration: line-through; }
-        .viewer-row.current { background-color: var(--mustard); color: var(--chocolate); font-weight: bold; border-radius: 5px;}
-        .viewer-row.future { color: var(--chocolate); }
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #fdfbf7; color: #333; }
+        header, .tools { width: 100%; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
+        select, button, input { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; flex: 1; }
+        .instruction-box { width: 100%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; margin-bottom: 30px; box-sizing: border-box; }
+        h2 { margin-top: 0; }
+        
+        #next-button { width: 100%; max-width: 400px; height: 150px; font-size: 24px; font-weight: bold; background-color: #ff9800; color: white; border: none; border-radius: 20px; cursor: pointer; box-shadow: 0 8px 15px rgba(255, 152, 0, 0.4); transition: background-color 0.2s; }
+        #next-button:active { background-color: #e68a00; transform: translateY(2px); box-shadow: none; }
+        #next-button:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+        
+        .all-instructions { width: 100%; max-width: 400px; margin-top: 30px; text-align: left; }
+        .done { text-decoration: line-through; color: #888; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>CustardCrochet</h1>
-    <div id="syncStatus"></div>
+    <header>
+        <select id="project-hopper" onchange="switchProject()"></select>
+        <button id="undo-button" onclick="undoRow()">Undo</button>
+    </header>
 
-    <div class="header-controls">
-        <select id="projectSelect"></select>
-        <button class="icon-btn danger" id="deleteBtn">🗑️</button>
-        <button class="icon-btn" id="toggleImportBtn">+ New Pattern</button>
+    <div class="tools">
+        <input type="file" id="json-upload" accept=".json" onchange="uploadProject(event)">
     </div>
 
-    <div id="importSection">
-        <h3>Import JSON Pattern</h3>
-        <textarea id="jsonInput" placeholder="Paste your valid pattern JSON here..."></textarea>
-        <br>
-        <button class="icon-btn" id="importBtn">Import</button>
+    <div class="instruction-box">
+        <h2 id="project-title">Loading...</h2>
+        <p id="current-instruction">Fetching your projects from Google Sheets...</p>
     </div>
 
-    <div id="patternDisplay">
-        <div id="rowLabel" style="color: var(--caramel); font-weight: bold; margin-bottom: 5px;"></div>
-        <div class="instruction" id="currentInstruction">Loading...</div>
-        <div class="notes" id="currentNotes"></div>
-    </div>
+    <button id="next-button" onclick="nextRow()" disabled>Next Row</button>
 
-    <button class="giant-btn" id="doneBtn">Done With Row</button>
-
-    <div class="secondary-controls">
-        <button class="secondary-btn" id="undoBtn">Undo</button>
-        <button class="secondary-btn" id="viewerBtn">View Pattern</button>
-    </div>
-
-    <div id="viewerModal">
-        <div class="modal-content">
-            <h2>Pattern Viewer</h2>
-            <div id="viewerList"></div>
-            <button class="secondary-btn" style="margin-top: 15px;" id="closeViewerBtn">Close</button>
-        </div>
+    <div class="all-instructions">
+        <h3>Pattern Overview</h3>
+        <ul id="instruction-list"></ul>
     </div>
 
     <script>
-        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyrCKJg0g17hS-gbbe1fNYHAx6SfkL_75TCkOZxQjxgCOMZpGImZAnzCG3oR2z9G23pIg/exec";
-        
-        let projects = JSON.parse(localStorage.getItem("custard_projects")) || [];
-        let currentProjectId = localStorage.getItem("custard_current_project");
+        // PASTE YOUR GOOGLE SHEETS WEB APP URL HERE
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5RGd8FvKLXUBHsBeQnFMWn8K8pC5_7oziggQrG8cKTDtAXFQ1QGJdoQ7JLHAbeOqi_A/exec";
+
+        let allProjects = [];
+        let allProgress = {};
         let activeProject = null;
         let currentRowIndex = 0;
+        let historyStack = [];
 
-        const syncStatus = document.getElementById('syncStatus');
-        const projectSelect = document.getElementById('projectSelect');
+        // 1. Boot up and fetch data from Backend
+        async function initApp() {
+            try {
+                const response = await fetch(GOOGLE_WEB_APP_URL);
+                const data = await response.json();
+                allProjects = data.projects;
+                allProgress = data.progress;
+                populateHopper();
+            } catch (error) {
+                document.getElementById("project-title").innerText = "Error";
+                document.getElementById("current-instruction").innerText = "Could not connect to Google Sheets.";
+            }
+        }
 
-        function init() {
-            if (projects.length > 0) {
-                if (!currentProjectId || !projects.find(p => p.projectId === currentProjectId)) {
-                    currentProjectId = projects[0].projectId;
+        // 2. Populate Dropdown and load selected
+        function populateHopper() {
+            const hopper = document.getElementById("project-hopper");
+            hopper.innerHTML = "";
+            if (allProjects.length === 0) {
+                hopper.innerHTML = "<option>No Projects Found</option>";
+                document.getElementById("project-title").innerText = "Upload a JSON!";
+                document.getElementById("current-instruction").innerText = "Use the file input above.";
+                return;
+            }
+            allProjects.forEach(proj => {
+                let opt = document.createElement("option");
+                opt.value = proj.projectId;
+                opt.innerText = proj.projectName;
+                hopper.appendChild(opt);
+            });
+            switchProject(); 
+        }
+
+        function switchProject() {
+            const hopper = document.getElementById("project-hopper");
+            activeProject = allProjects.find(p => p.projectId === hopper.value);
+            currentRowIndex = allProgress[activeProject.projectId] || 0;
+            historyStack = []; 
+            document.getElementById("next-button").disabled = false;
+            renderUI();
+        }
+
+        function renderUI() {
+            if (!activeProject) return;
+            document.getElementById("project-title").innerText = activeProject.projectName;
+            
+            const currentInst = activeProject.instructions[currentRowIndex] || "Project Complete!";
+            document.getElementById("current-instruction").innerText = currentInst;
+
+            const listEl = document.getElementById("instruction-list");
+            listEl.innerHTML = "";
+            activeProject.instructions.forEach((inst, index) => {
+                const li = document.createElement("li");
+                li.innerText = inst;
+                if (index < currentRowIndex) li.className = "done";
+                listEl.appendChild(li);
+            });
+
+            document.getElementById("undo-button").disabled = (historyStack.length === 0);
+        }
+
+        // 3. The Big Next Button Logic
+        async function nextRow() {
+            if (currentRowIndex < activeProject.instructions.length) {
+                const button = document.getElementById("next-button");
+                button.innerText = "Saving...";
+                button.disabled = true;
+
+                try {
+                    const response = await fetch(GOOGLE_WEB_APP_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: currentRowIndex + 1 })
+                    });
+                    const result = await response.json();
+                    if (result.status === "saved") {
+                        historyStack.push(currentRowIndex);
+                        currentRowIndex++;
+                        allProgress[activeProject.projectId] = currentRowIndex;
+                        renderUI();
+                        button.innerText = "Next Row";
+                    }
+                } catch (error) {
+                    button.innerText = "Error! Try Again.";
+                } finally {
+                    button.disabled = false;
+                    setTimeout(() => { if (button.innerText === "Error! Try Again.") button.innerText = "Next Row"; }, 3000);
                 }
-                loadProject(currentProjectId);
-            } else {
-                document.getElementById('currentInstruction').innerText = "No projects found. Import one to start!";
-            }
-            populateDropdown();
-        }
-
-        function populateDropdown() {
-            projectSelect.innerHTML = "";
-            projects.forEach(p => {
-                let opt = document.createElement('option');
-                opt.value = p.projectId;
-                opt.innerText = p.projectName;
-                if (p.projectId === currentProjectId) opt.selected = true;
-                projectSelect.appendChild(opt);
-            });
-        }
-
-        function loadProject(id) {
-            activeProject = projects.find(p => p.projectId === id);
-            currentProjectId = id;
-            localStorage.setItem("custard_current_project", id);
-            currentRowIndex = parseInt(localStorage.getItem(`${id}_row`)) || 0;
-            renderRow();
-        }
-
-        function renderRow() {
-            if (!activeProject) return;
-            if (currentRowIndex >= activeProject.pattern.length) {
-                document.getElementById('rowLabel').innerText = "";
-                document.getElementById('currentInstruction').innerText = "Project Complete! 🎉";
-                document.getElementById('currentNotes').innerText = "";
-                return;
-            }
-            const rowData = activeProject.pattern[currentRowIndex];
-            document.getElementById('rowLabel').innerText = `Row ${rowData.rowNumber} of ${activeProject.totalRows}`;
-            document.getElementById('currentInstruction').innerText = rowData.instruction;
-            document.getElementById('currentNotes').innerText = rowData.notes ? `Notes: ${rowData.notes}` : "";
-        }
-
-        async function sendToGoogle(payload) {
-            if (GOOGLE_WEB_APP_URL === "PASTE_YOUR_COPIED_URL_HERE" || !GOOGLE_WEB_APP_URL) {
-                alert("WARNING: The app is trying to sync, but the Google URL is missing!");
-                return;
-            }
-            syncStatus.innerText = "Consulting the Purins...";
-            try {
-                await fetch(GOOGLE_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                syncStatus.innerText = "The Purins have aggreed!";
-                setTimeout(() => syncStatus.innerText = "", 3000);
-            } catch (e) {
-                syncStatus.innerText = "The Purins are asleep (Offline)";
             }
         }
 
-        // --- Event Listeners ---
-        document.getElementById('doneBtn').addEventListener('click', () => {
-            if (!activeProject || currentRowIndex >= activeProject.pattern.length) return;
-            currentRowIndex++;
-            localStorage.setItem(`${currentProjectId}_row`, currentRowIndex);
-            renderRow();
-            sendToGoogle({ action: "updateProgress", projectId: currentProjectId, currentRow: currentRowIndex });
-        });
+        // 4. Undo Logic
+        async function undoRow() {
+            if (historyStack.length > 0) {
+                const prevRowIndex = historyStack.pop();
+                const button = document.getElementById("next-button");
+                button.innerText = "Undoing...";
+                button.disabled = true;
 
-        document.getElementById('undoBtn').addEventListener('click', () => {
-            if (!activeProject || currentRowIndex <= 0) return;
-            currentRowIndex--;
-            localStorage.setItem(`${currentProjectId}_row`, currentRowIndex);
-            renderRow();
-            sendToGoogle({ action: "updateProgress", projectId: currentProjectId, currentRow: currentRowIndex });
-        });
-
-        projectSelect.addEventListener('change', (e) => loadProject(e.target.value));
-
-        // Import Toggle
-        document.getElementById('toggleImportBtn').addEventListener('click', () => {
-            const sec = document.getElementById('importSection');
-            sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
-        });
-
-        // Import Logic
-        document.getElementById('importBtn').addEventListener('click', () => {
-            try {
-                const newProj = JSON.parse(document.getElementById('jsonInput').value);
-                if (!newProj.projectId || !newProj.projectName || !newProj.pattern) throw new Error("Missing required JSON labels");
-                
-                projects.push(newProj);
-                localStorage.setItem("custard_projects", JSON.stringify(projects));
-                document.getElementById('importSection').style.display = 'none';
-                document.getElementById('jsonInput').value = "";
-                
-                sendToGoogle({ action: "addProject", projectId: newProj.projectId, projectName: newProj.projectName, patternJSON: JSON.stringify(newProj) });
-                
-                init();
-                loadProject(newProj.projectId);
-            } catch (e) {
-                alert("Invalid JSON format! " + e.message);
+                try {
+                    await fetch(GOOGLE_WEB_APP_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: prevRowIndex })
+                    });
+                    currentRowIndex = prevRowIndex;
+                    allProgress[activeProject.projectId] = currentRowIndex;
+                    renderUI();
+                } catch (error) {
+                    historyStack.push(prevRowIndex); 
+                } finally {
+                    button.innerText = "Next Row";
+                    button.disabled = false;
+                }
             }
-        });
+        }
 
-        // Delete Logic
-        document.getElementById('deleteBtn').addEventListener('click', () => {
-            if (!activeProject) return;
-            if(confirm(`Are you sure you want to delete ${activeProject.projectName}?`)) {
-                projects = projects.filter(p => p.projectId !== currentProjectId);
-                localStorage.setItem("custard_projects", JSON.stringify(projects));
-                localStorage.removeItem(`${currentProjectId}_row`);
-                
-                sendToGoogle({ action: "deleteProject", projectId: currentProjectId });
-                
-                currentProjectId = null;
-                init();
-            }
-        });
+        // 5. JSON Upload Logic
+        function uploadProject(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const newProject = JSON.parse(e.target.result);
+                document.getElementById("next-button").innerText = "Uploading Pattern...";
+                try {
+                    await fetch(GOOGLE_WEB_APP_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "addProject", ...newProject })
+                    });
+                    allProjects.push(newProject);
+                    populateHopper();
+                    document.getElementById("project-hopper").value = newProject.projectId;
+                    switchProject();
+                } catch (err) {
+                    alert("Failed to upload to Google Sheets.");
+                }
+                document.getElementById("next-button").innerText = "Next Row";
+            };
+            reader.readAsText(file);
+        }
 
-        // Pattern Viewer
-        document.getElementById('viewerBtn').addEventListener('click', () => {
-            if (!activeProject) return;
-            const list = document.getElementById('viewerList');
-            list.innerHTML = "";
-            activeProject.pattern.forEach((row, i) => {
-                let div = document.createElement('div');
-                div.innerText = `Row ${row.rowNumber}: ${row.instruction}`;
-                div.className = 'viewer-row ' + (i < currentRowIndex ? 'finished' : (i === currentRowIndex ? 'current' : 'future'));
-                div.onclick = () => {
-                    currentRowIndex = i;
-                    localStorage.setItem(`${currentProjectId}_row`, currentRowIndex);
-                    renderRow();
-                    sendToGoogle({ action: "updateProgress", projectId: currentProjectId, currentRow: currentRowIndex });
-                    document.getElementById('viewerModal').style.display = 'none';
-                };
-                list.appendChild(div);
-            });
-            document.getElementById('viewerModal').style.display = 'block';
-        });
-
-        document.getElementById('closeViewerBtn').addEventListener('click', () => {
-            document.getElementById('viewerModal').style.display = 'none';
-        });
-
-        // Start App
-        init();
+        initApp();
     </script>
 </body>
 </html>
