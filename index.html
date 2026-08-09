@@ -33,10 +33,11 @@
         #delete-button { background-color: var(--dark-brown); color: var(--cream); border: none; cursor: pointer; font-weight: bold; width: 100px; }
         #delete-button:hover { background-color: #311d11; }
         
-        /* Import Section */
-        .import-section { width: 100%; max-width: 400px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        /* Import Section & Toggle Buttons */
+        .collapsible-section { width: 100%; max-width: 400px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
         .toggle-btn { background-color: var(--yellow); border: 2px solid var(--caramel); cursor: pointer; font-weight: bold; }
         .toggle-btn:hover { filter: brightness(0.95); }
+        
         #import-tools { display: flex; flex-direction: column; gap: 10px; }
         textarea { resize: vertical; font-family: monospace; font-size: 14px; border: 2px solid var(--caramel); }
         .import-btn { background-color: var(--caramel); color: white; border: none; cursor: pointer; font-weight: bold; }
@@ -74,12 +75,12 @@
         .sync-status { text-align: center; font-size: 14px; font-style: italic; font-weight: bold; color: var(--caramel); margin: 0; min-height: 20px; }
 
         /* Pattern Overview */
-        .all-instructions { width: 100%; max-width: 400px; margin-top: 20px; text-align: left; }
+        .all-instructions { width: 100%; text-align: left; background: white; padding: 15px; border-radius: 12px; border: 2px solid var(--caramel); box-sizing: border-box; }
         
         /* Clickable List Items */
-        #instruction-list { list-style-type: none; padding: 0; }
+        #instruction-list { list-style-type: none; padding: 0; margin: 0; }
         #instruction-list li { 
-            padding: 8px 12px; 
+            padding: 10px 12px; 
             margin-bottom: 5px; 
             border-radius: 6px; 
             cursor: pointer; 
@@ -90,6 +91,8 @@
         #instruction-list li:active { transform: scale(0.98); }
         .done { text-decoration: line-through; opacity: 0.5; }
         .active-row { font-weight: bold; color: var(--orange); background-color: rgba(234, 163, 64, 0.1); border-color: var(--orange) !important; }
+        
+        /* Utility */
         .hidden { display: none !important; }
     </style>
 </head>
@@ -100,7 +103,7 @@
         <button id="delete-button" onclick="deleteProject()">🗑️ Delete</button>
     </header>
 
-    <div class="import-section">
+    <div class="collapsible-section">
         <button class="toggle-btn" onclick="toggleImport()">➕ Add New Pattern</button>
         <div id="import-tools" class="hidden">
             <textarea id="json-input" rows="4" placeholder="Paste your generated pattern JSON here..."></textarea>
@@ -118,9 +121,11 @@
         <p id="sync-status" class="sync-status"></p>
     </div>
 
-    <div class="all-instructions">
-        <h3>Pattern Overview</h3>
-        <ul id="instruction-list"></ul>
+    <div class="collapsible-section" style="margin-top: 20px;">
+        <button id="overview-toggle-btn" class="toggle-btn" onclick="toggleOverview()">📜 View Pattern Overview</button>
+        <div id="overview-container" class="all-instructions hidden">
+            <ul id="instruction-list"></ul>
+        </div>
     </div>
 
     <script>
@@ -319,9 +324,22 @@
             });
         }
 
+        // Toggle functions for the collapsible menus
         function toggleImport() {
             const tools = document.getElementById("import-tools");
             tools.classList.toggle("hidden");
+        }
+
+        function toggleOverview() {
+            const overview = document.getElementById("overview-container");
+            const btn = document.getElementById("overview-toggle-btn");
+            overview.classList.toggle("hidden");
+            
+            if (overview.classList.contains("hidden")) {
+                btn.innerText = "📜 View Pattern Overview";
+            } else {
+                btn.innerText = "Hide Pattern Overview";
+            }
         }
 
         async function importJson() {
