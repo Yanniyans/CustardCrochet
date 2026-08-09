@@ -174,55 +174,88 @@
             document.getElementById("undo-button").disabled = (historyStack.length === 0);
         }
 
-        async function nextRow() {
+        // The Lightning-Fast Next Button
+        function nextRow() {
             if (currentRowIndex < activeProject.instructions.length) {
-                const button = document.getElementById("next-button");
-                button.innerText = "Saving...";
-                button.disabled = true;
+                // 1. Instantly update the local memory and screen (Optimistic Update)
+                historyStack.push(currentRowIndex);
+                currentRowIndex++;
+                allProgress[activeProject.projectId] = currentRowIndex;
+                renderUI(); 
 
-                try {
-                    const response = await fetch(GOOGLE_WEB_APP_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: currentRowIndex + 1 })
-                    });
-                    const result = await response.json();
+                // 2. Silently sync to Google Sheets in the background
+                const button = document.getElementById("next-button");
+                button.innerText = "Consulting the purins..."; 
+                
+                fetch(GOOGLE_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ 
+                        action: "updateProgress", 
+                        projectId: activeProject.projectId, 
+                        newRow: currentRowIndex 
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
                     if (result.status === "saved") {
-                        historyStack.push(currentRowIndex);
-                        currentRowIndex++;
-                        allProgress[activeProject.projectId] = currentRowIndex;
-                        renderUI();
-                        button.innerText = "Next Row";
+                        button.innerText = "The purins have agreed!";
+                        
+                        // Revert text back to normal after 2 seconds
+                        setTimeout(() => { 
+                            if (button.innerText === "The purins have agreed!") {
+                                button.innerText = "Next Row"; 
+                            }
+                        }, 2000);
                     }
-                } catch (error) {
-                    button.innerText = "Error! Try Again.";
-                } finally {
-                    button.disabled = false;
-                    setTimeout(() => { if (button.innerText === "Error! Try Again.") button.innerText = "Next Row"; }, 3000);
-                }
+                })
+                .catch(error => {
+                    console.error("Sync error:", error);
+                    button.innerText = "Next Row (Offline)";
+                });
             }
         }
 
-        async function undoRow() {
+        // The Lightning-Fast Undo Button
+        function undoRow() {
             if (historyStack.length > 0) {
+                // 1. Instantly update the local memory and screen (Optimistic Update)
                 const prevRowIndex = historyStack.pop();
-                const button = document.getElementById("next-button");
-                button.innerText = "Undoing...";
-                button.disabled = true;
+                currentRowIndex = prevRowIndex;
+                allProgress[activeProject.projectId] = currentRowIndex;
+                renderUI();
 
-                try {
-                    await fetch(GOOGLE_WEB_APP_URL, {
-                        method: "POST",
-                        body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: prevRowIndex })
-                    });
-                    currentRowIndex = prevRowIndex;
-                    allProgress[activeProject.projectId] = currentRowIndex;
-                    renderUI();
-                } catch (error) {
-                    historyStack.push(prevRowIndex); 
-                } finally {
-                    button.innerText = "Next Row";
+                // 2. Silently sync the reverted state to Google Sheets
+                const button = document.getElementById("undo-button");
+                button.innerText = "Consulting the purins...";
+                button.disabled = true; // Briefly disable so you don't double-undo too fast
+
+                fetch(GOOGLE_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ 
+                        action: "updateProgress", 
+                        projectId: activeProject.projectId, 
+                        newRow: prevRowIndex 
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === "saved") {
+                        button.innerText = "The purins have agreed!";
+                        button.disabled = false;
+                        
+                        // Revert text back to normal after 2 seconds
+                        setTimeout(() => {
+                            if (button.innerText === "The purins have agreed!") {
+                                button.innerText = "Undo Previous Row";
+                            }
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error("Undo failed to sync:", error);
+                    button.innerText = "Undo (Offline)";
                     button.disabled = false;
-                }
+                });
             }
         }
 
