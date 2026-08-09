@@ -33,36 +33,32 @@
         #delete-button { background-color: var(--dark-brown); color: var(--cream); border: none; cursor: pointer; font-weight: bold; width: 100px; }
         #delete-button:hover { background-color: #311d11; }
         
-        /* Import Section & Toggle Buttons */
+        /* Collapsible Sections & Menus */
         .collapsible-section { width: 100%; max-width: 400px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
         .toggle-btn { background-color: var(--yellow); border: 2px solid var(--caramel); cursor: pointer; font-weight: bold; }
         .toggle-btn:hover { filter: brightness(0.95); }
         
-        #import-tools { display: flex; flex-direction: column; gap: 10px; }
+        .tool-panel { display: flex; flex-direction: column; gap: 10px; background: white; padding: 15px; border-radius: 12px; border: 2px solid var(--caramel); }
         textarea { resize: vertical; font-family: monospace; font-size: 14px; border: 2px solid var(--caramel); }
-        .import-btn { background-color: var(--caramel); color: white; border: none; cursor: pointer; font-weight: bold; }
-        .import-btn:hover { filter: brightness(0.9); }
+        .action-btn { background-color: var(--caramel); color: white; border: none; cursor: pointer; font-weight: bold; flex: 1;}
+        .action-btn:hover { filter: brightness(0.9); }
+        .btn-row { display: flex; gap: 10px; }
         
         /* Main Instruction Display */
         .instruction-box { width: 100%; max-width: 400px; background: white; padding: 30px 20px; border-radius: 12px; border: 2px solid var(--caramel); box-shadow: 0 4px 8px rgba(75, 45, 27, 0.15); text-align: center; margin-bottom: 30px; box-sizing: border-box; }
         #current-instruction { font-size: 24px; font-weight: bold; margin: 0; line-height: 1.4; color: var(--dark-brown); }
         
+        /* Note Displays */
+        .project-note { font-size: 14px; background: var(--yellow); padding: 8px; border-radius: 6px; margin-bottom: 15px; border: 1px dashed var(--caramel); text-align: left; }
+        .row-note { font-size: 15px; font-style: italic; color: #666; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .note-label { font-weight: bold; color: var(--caramel); font-style: normal; display: block; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; }
+
         /* Main Buttons */
         .button-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
         
         /* Tactile 3D Next Button */
         #next-button { 
-            width: 100%; 
-            height: 150px; 
-            font-size: 28px; 
-            font-weight: bold; 
-            background-color: var(--orange); 
-            color: var(--dark-brown); 
-            border: 3px solid var(--dark-brown); 
-            border-radius: 20px; 
-            cursor: pointer; 
-            box-shadow: 0 8px 0px var(--dark-brown); 
-            transition: all 0.1s; 
+            width: 100%; height: 150px; font-size: 28px; font-weight: bold; background-color: var(--orange); color: var(--dark-brown); border: 3px solid var(--dark-brown); border-radius: 20px; cursor: pointer; box-shadow: 0 8px 0px var(--dark-brown); transition: all 0.1s; 
         }
         #next-button:active { transform: translateY(8px); box-shadow: 0 0px 0px var(--dark-brown); }
         #next-button:disabled { background-color: #ccc; border-color: #999; color: #666; box-shadow: none; transform: none; cursor: not-allowed; }
@@ -76,23 +72,13 @@
 
         /* Pattern Overview */
         .all-instructions { width: 100%; text-align: left; background: white; padding: 15px; border-radius: 12px; border: 2px solid var(--caramel); box-sizing: border-box; }
-        
-        /* Clickable List Items */
         #instruction-list { list-style-type: none; padding: 0; margin: 0; }
-        #instruction-list li { 
-            padding: 10px 12px; 
-            margin-bottom: 5px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            transition: background-color 0.2s, transform 0.1s; 
-            border: 1px solid transparent;
-        }
+        #instruction-list li { padding: 10px 12px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s, transform 0.1s; border: 1px solid transparent; }
         #instruction-list li:hover { background-color: rgba(152, 104, 67, 0.1); border-color: rgba(152, 104, 67, 0.3); }
         #instruction-list li:active { transform: scale(0.98); }
         .done { text-decoration: line-through; opacity: 0.5; }
         .active-row { font-weight: bold; color: var(--orange); background-color: rgba(234, 163, 64, 0.1); border-color: var(--orange) !important; }
         
-        /* Utility */
         .hidden { display: none !important; }
     </style>
 </head>
@@ -104,15 +90,29 @@
     </header>
 
     <div class="collapsible-section">
-        <button class="toggle-btn" onclick="toggleImport()">➕ Add New Pattern</button>
-        <div id="import-tools" class="hidden">
+        <div class="btn-row">
+            <button class="toggle-btn" onclick="toggleMenu('import-tools')">➕ Add Pattern</button>
+            <button class="toggle-btn" onclick="toggleMenu('notes-tools')">📝 Manage Notes</button>
+        </div>
+
+        <div id="import-tools" class="tool-panel hidden">
             <textarea id="json-input" rows="4" placeholder="Paste your generated pattern JSON here..."></textarea>
-            <button class="import-btn" onclick="importJson()">Import Pattern</button>
+            <button class="action-btn" onclick="importJson()">Import Pattern</button>
+        </div>
+
+        <div id="notes-tools" class="tool-panel hidden">
+            <textarea id="note-input" rows="3" placeholder="Type a reminder or pattern adjustment here..."></textarea>
+            <div class="btn-row">
+                <button class="action-btn" onclick="saveNote('row')">Save to Current Row</button>
+                <button class="action-btn" onclick="saveNote('project')">Save to Project</button>
+            </div>
         </div>
     </div>
 
     <div class="instruction-box">
+        <div id="current-project-note" class="project-note hidden"></div>
         <p id="current-instruction">Checking device memory...</p>
+        <div id="current-row-note" class="row-note hidden"></div>
     </div>
 
     <div class="button-group">
@@ -122,7 +122,7 @@
     </div>
 
     <div class="collapsible-section" style="margin-top: 20px;">
-        <button id="overview-toggle-btn" class="toggle-btn" onclick="toggleOverview()">📜 View Pattern Overview</button>
+        <button id="overview-toggle-btn" class="toggle-btn" onclick="toggleMenu('overview-container')">📜 View Pattern Overview</button>
         <div id="overview-container" class="all-instructions hidden">
             <ul id="instruction-list"></ul>
         </div>
@@ -130,7 +130,7 @@
 
     <script>
         // PASTE YOUR GOOGLE SHEETS WEB APP URL HERE
-        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzHYABF4BOo91BV9P2Fyco32kzdXKqn_ZJy3rzbik_Vqrm2_3PWVVT-kNEiZxeoVLAmOg/exec";
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyRxxoNcpP5f6UIe4jeZziYAb39urxZcv6QKBYSrbeGK4emsaMhmcJ2ihLsDT9xzqHDIw/exec";
 
         let allProjects = [];
         let allProgress = {};
@@ -138,14 +138,22 @@
         let currentRowIndex = 0;
         let historyStack = [];
 
-        // Helper to save to local memory instantly
+        // Ensure progress object is formatted correctly
+        function getProgressObj(id) {
+            if (!allProgress[id]) {
+                allProgress[id] = { currentRow: 0, projectNotes: "", rowNotes: {} };
+            } else if (typeof allProgress[id] === 'number') {
+                allProgress[id] = { currentRow: allProgress[id], projectNotes: "", rowNotes: {} };
+            }
+            return allProgress[id];
+        }
+
         function saveToLocalMemory() {
             localStorage.setItem("custardProjects", JSON.stringify(allProjects));
             localStorage.setItem("custardProgress", JSON.stringify(allProgress));
         }
 
         async function initApp() {
-            // 1. INSTANT BOOT: Try loading from local device storage first
             const cachedProjects = localStorage.getItem("custardProjects");
             const cachedProgress = localStorage.getItem("custardProgress");
 
@@ -158,17 +166,13 @@
                 document.getElementById("current-instruction").innerText = "Fetching your projects from Google Sheets for the first time...";
             }
 
-            // 2. BACKGROUND SYNC: Check Google Sheets silently to ensure it's up to date
             try {
                 const response = await fetch(GOOGLE_WEB_APP_URL);
                 const data = await response.json();
                 allProjects = data.projects;
                 allProgress = data.progress;
                 
-                // Update local memory with the freshest data
                 saveToLocalMemory();
-                
-                // Refresh UI in case data changed from another device
                 populateHopper(); 
                 setSyncStatus("Sync complete!");
             } catch (error) {
@@ -185,7 +189,7 @@
             hopper.innerHTML = "";
             if (allProjects.length === 0) {
                 hopper.innerHTML = "<option>No Projects Found</option>";
-                document.getElementById("current-instruction").innerText = "Tap 'Add New Pattern' to get started!";
+                document.getElementById("current-instruction").innerText = "Tap 'Add Pattern' to get started!";
                 document.getElementById("delete-button").disabled = true;
                 document.getElementById("next-button").disabled = true;
                 return;
@@ -204,7 +208,9 @@
             const hopper = document.getElementById("project-hopper");
             activeProject = allProjects.find(p => p.projectId === hopper.value);
             if (!activeProject) return;
-            currentRowIndex = allProgress[activeProject.projectId] || 0;
+            
+            const pData = getProgressObj(activeProject.projectId);
+            currentRowIndex = pData.currentRow || 0;
             historyStack = []; 
             document.getElementById("next-button").disabled = false;
             renderUI();
@@ -212,16 +218,40 @@
 
         function renderUI() {
             if (!activeProject) return;
+            const pData = getProgressObj(activeProject.projectId);
             
+            // 1. Instruction Text
             const currentInst = activeProject.instructions[currentRowIndex] || "🎉 Project Complete!";
             document.getElementById("current-instruction").innerText = currentInst;
 
+            // 2. Project Notes Logic
+            const jsonProjNote = activeProject.projectNote || "";
+            const userProjNote = pData.projectNotes || "";
+            let finalProjNote = "";
+            if (jsonProjNote) finalProjNote += `<span class='note-label'>Pattern Note:</span> ${jsonProjNote}<br><br>`;
+            if (userProjNote) finalProjNote += `<span class='note-label'>My Note:</span> ${userProjNote}`;
+            
+            const projNoteEl = document.getElementById("current-project-note");
+            projNoteEl.innerHTML = finalProjNote.trim();
+            projNoteEl.classList.toggle("hidden", finalProjNote.trim() === "");
+
+            // 3. Row Notes Logic
+            const jsonRowNote = activeProject.rowNotes ? activeProject.rowNotes[currentRowIndex] : null;
+            const userRowNote = pData.rowNotes ? pData.rowNotes[currentRowIndex] : null;
+            let finalRowNote = "";
+            if (jsonRowNote) finalRowNote += `<span class='note-label'>Pattern Note:</span> ${jsonRowNote}<br><br>`;
+            if (userRowNote) finalRowNote += `<span class='note-label'>My Note:</span> ${userRowNote}`;
+            
+            const rowNoteEl = document.getElementById("current-row-note");
+            rowNoteEl.innerHTML = finalRowNote.trim();
+            rowNoteEl.classList.toggle("hidden", finalRowNote.trim() === "");
+
+            // 4. Pattern Overview List
             const listEl = document.getElementById("instruction-list");
             listEl.innerHTML = "";
             activeProject.instructions.forEach((inst, index) => {
                 const li = document.createElement("li");
                 li.innerText = inst;
-                
                 li.onclick = () => jumpToRow(index);
                 
                 if (index < currentRowIndex) li.className = "done";
@@ -236,135 +266,126 @@
         function setSyncStatus(message) {
             const statusEl = document.getElementById("sync-status");
             statusEl.innerText = message;
-            
-            if (message === "The purins have agreed!" || message === "Sync complete!") {
-                setTimeout(() => {
-                    if (statusEl.innerText === message) {
-                        statusEl.innerText = "";
-                    }
-                }, 2000);
+            if (message === "The purins have agreed!" || message === "Sync complete!" || message === "Notes updated!") {
+                setTimeout(() => { if (statusEl.innerText === message) statusEl.innerText = ""; }, 2000);
             }
+        }
+
+        function syncProgressToSheets(pData) {
+            fetch(GOOGLE_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ 
+                    action: "updateProgress", 
+                    projectId: activeProject.projectId, 
+                    newRow: pData.currentRow,
+                    projectNotes: pData.projectNotes,
+                    rowNotes: pData.rowNotes
+                })
+            })
+            .then(response => response.json())
+            .then(result => { if (result.status === "saved") setSyncStatus("The purins have agreed!"); })
+            .catch(error => { setSyncStatus("Offline mode - Saved locally!"); });
         }
 
         function nextRow() {
             if (currentRowIndex < activeProject.instructions.length) {
                 historyStack.push(currentRowIndex);
                 currentRowIndex++;
-                allProgress[activeProject.projectId] = currentRowIndex;
                 
-                saveToLocalMemory(); // Save instantly to device
+                const pData = getProgressObj(activeProject.projectId);
+                pData.currentRow = currentRowIndex;
+                
+                saveToLocalMemory(); 
                 renderUI(); 
-
                 setSyncStatus("Consulting the purins..."); 
-                
-                fetch(GOOGLE_WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: currentRowIndex })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === "saved") setSyncStatus("The purins have agreed!");
-                })
-                .catch(error => {
-                    console.error("Sync error:", error);
-                    setSyncStatus("Offline mode - Saved locally!");
-                });
+                syncProgressToSheets(pData);
             }
         }
 
         function undoRow() {
             if (historyStack.length > 0) {
-                const prevRowIndex = historyStack.pop();
-                currentRowIndex = prevRowIndex;
-                allProgress[activeProject.projectId] = currentRowIndex;
+                currentRowIndex = historyStack.pop();
                 
-                saveToLocalMemory(); // Save instantly to device
+                const pData = getProgressObj(activeProject.projectId);
+                pData.currentRow = currentRowIndex;
+                
+                saveToLocalMemory(); 
                 renderUI();
-
                 setSyncStatus("Consulting the purins...");
-
-                fetch(GOOGLE_WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: prevRowIndex })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === "saved") setSyncStatus("The purins have agreed!");
-                })
-                .catch(error => {
-                    console.error("Undo failed to sync:", error);
-                    setSyncStatus("Offline mode - Saved locally!");
-                });
+                syncProgressToSheets(pData);
             }
         }
 
         function jumpToRow(targetIndex) {
             if (targetIndex === currentRowIndex) return;
-
             historyStack.push(currentRowIndex); 
             currentRowIndex = targetIndex;
-            allProgress[activeProject.projectId] = currentRowIndex;
             
-            saveToLocalMemory(); // Save instantly to device
+            const pData = getProgressObj(activeProject.projectId);
+            pData.currentRow = currentRowIndex;
+            
+            saveToLocalMemory();
             renderUI();
-
             setSyncStatus("Consulting the purins...");
-
-            fetch(GOOGLE_WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "updateProgress", projectId: activeProject.projectId, newRow: currentRowIndex })
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === "saved") setSyncStatus("The purins have agreed!");
-            })
-            .catch(error => {
-                console.error("Jump failed to sync:", error);
-                setSyncStatus("Offline mode - Saved locally!");
-            });
+            syncProgressToSheets(pData);
         }
 
-        // Toggle functions for the collapsible menus
-        function toggleImport() {
-            const tools = document.getElementById("import-tools");
-            tools.classList.toggle("hidden");
-        }
+        // New Note Logic
+        function saveNote(type) {
+            const inputField = document.getElementById("note-input");
+            const noteText = inputField.value.trim();
+            if (!activeProject) return;
 
-        function toggleOverview() {
-            const overview = document.getElementById("overview-container");
-            const btn = document.getElementById("overview-toggle-btn");
-            overview.classList.toggle("hidden");
+            const pData = getProgressObj(activeProject.projectId);
+
+            if (type === 'project') {
+                pData.projectNotes = noteText;
+            } else if (type === 'row') {
+                if (noteText === "") {
+                    delete pData.rowNotes[currentRowIndex];
+                } else {
+                    pData.rowNotes[currentRowIndex] = noteText;
+                }
+            }
+
+            saveToLocalMemory();
+            renderUI();
             
-            if (overview.classList.contains("hidden")) {
-                btn.innerText = "📜 View Pattern Overview";
-            } else {
-                btn.innerText = "Hide Pattern Overview";
+            inputField.value = "";
+            toggleMenu('notes-tools'); // Hide menu after saving
+            
+            setSyncStatus("Syncing notes to purins...");
+            syncProgressToSheets(pData);
+        }
+
+        // Universal Menu Toggle
+        function toggleMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            menu.classList.toggle("hidden");
+            
+            if(menuId === "overview-container") {
+                const btn = document.getElementById("overview-toggle-btn");
+                btn.innerText = menu.classList.contains("hidden") ? "📜 View Pattern Overview" : "Hide Pattern Overview";
             }
         }
 
         async function importJson() {
             const inputField = document.getElementById("json-input");
             const jsonText = inputField.value.trim();
-            const button = document.querySelector(".import-btn");
-
             if (!jsonText) { alert("Please paste the JSON code first!"); return; }
 
             try {
                 const newProject = JSON.parse(jsonText);
-                button.innerText = "Importing...";
-                button.disabled = true;
-
-                // Optimistically add to local memory so you can start right away!
+                
                 allProjects.push(newProject);
                 saveToLocalMemory();
                 populateHopper();
                 document.getElementById("project-hopper").value = newProject.projectId;
                 switchProject();
                 inputField.value = ""; 
-                toggleImport(); 
+                toggleMenu('import-tools'); 
 
                 setSyncStatus("Sending pattern to the purins...");
-
                 const response = await fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
                     body: JSON.stringify({ action: "addProject", ...newProject })
@@ -375,9 +396,6 @@
 
             } catch (err) {
                 alert("Oops! The text you pasted isn't valid JSON, or there was a connection error.");
-            } finally {
-                button.innerText = "Import Pattern";
-                button.disabled = false;
             }
         }
 
@@ -386,12 +404,7 @@
             
             const confirmDelete = confirm(`Are you sure you want to permanently delete "${activeProject.projectName}"?`);
             if (!confirmDelete) return;
-
-            const button = document.getElementById("delete-button");
-            button.innerText = "Deleting...";
-            button.disabled = true;
             
-            // Delete locally first for speed
             allProjects = allProjects.filter(p => p.projectId !== activeProject.projectId);
             delete allProgress[activeProject.projectId];
             saveToLocalMemory();
@@ -404,14 +417,10 @@
                     method: "POST",
                     body: JSON.stringify({ action: "deleteProject", projectId: activeProject.projectId })
                 });
-                
                 const result = await response.json();
                 if(result.status === "project_deleted") setSyncStatus("Deleted!");
             } catch (err) {
                 alert("Failed to delete the project from Google Sheets. It may reappear on other devices.");
-            } finally {
-                button.innerText = "🗑️ Delete";
-                button.disabled = false;
             }
         }
 
