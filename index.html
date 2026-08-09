@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CustardCrochet</title>
+    <title>CustardCrochet 2.0</title>
     <style>
         /* The Custom Crochet Palette */
         :root {
@@ -23,6 +23,17 @@
             background-color: var(--cream); 
             color: var(--dark-brown); 
         }
+
+        /* App Title */
+        .app-title {
+            color: var(--dark-brown);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+        }
         
         /* Header & Hopper */
         header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
@@ -39,10 +50,11 @@
         .toggle-btn:hover { filter: brightness(0.95); }
         
         .tool-panel { display: flex; flex-direction: column; gap: 10px; background: white; padding: 15px; border-radius: 12px; border: 2px solid var(--caramel); }
-        textarea { resize: vertical; font-family: monospace; font-size: 14px; border: 2px solid var(--caramel); }
+        textarea { resize: vertical; font-family: sans-serif; font-size: 14px; border: 2px solid var(--caramel); }
         .action-btn { background-color: var(--caramel); color: white; border: none; cursor: pointer; font-weight: bold; flex: 1;}
         .action-btn:hover { filter: brightness(0.9); }
         .danger-btn { background-color: #d9534f; }
+        .hidden-btn { background-color: #888 !important; }
         .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
         
         /* Main Instruction Display */
@@ -52,12 +64,12 @@
         
         /* Note Displays */
         .project-note { font-size: 14px; background: var(--yellow); padding: 8px; border-radius: 6px; margin-bottom: 15px; border: 1px dashed var(--caramel); text-align: left; }
-        .row-note { font-size: 15px; font-style: italic; color: #666; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-        .note-label { font-weight: bold; color: var(--caramel); font-style: normal; display: block; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; }
+        .row-note { font-size: 15px; font-style: italic; color: #666; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; text-align: left;}
+        .note-label { font-weight: bold; color: var(--caramel); font-style: normal; display: block; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; margin-top: 5px;}
 
         /* Dashboard Styles */
-        .dash-item { display: flex; flex-direction: column; gap: 5px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background-color: #fcfcfc; margin-bottom: 10px;}
-        .dash-item-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; }
+        .dash-item { display: flex; flex-direction: column; gap: 5px; padding: 15px; border: 2px solid var(--cream); border-radius: 8px; background-color: #fdfdfd; margin-bottom: 10px;}
+        .dash-item-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 16px; margin-bottom: 5px; color: var(--dark-brown); border-bottom: 1px solid #eee; padding-bottom: 5px;}
         .dash-item input[type="number"] { width: 60px; padding: 5px; }
 
         /* Main Buttons */
@@ -91,6 +103,8 @@
 </head>
 <body>
 
+    <h1 class="app-title">CustardCrochet 2.0</h1>
+
     <header>
         <select id="project-hopper" onchange="switchProject()"></select>
         <button id="delete-button" onclick="deleteProject()">🗑️ Delete</button>
@@ -101,7 +115,7 @@
             <button class="toggle-btn" onclick="toggleMenu('import-tools')">➕ Add Pattern</button>
             <button class="toggle-btn" onclick="toggleMenu('notes-tools')">✏️ Quick Note</button>
             <button class="toggle-btn" onclick="openNotesDashboard()">🗂️ Notes Dashboard</button>
-            <button id="notes-visibility-btn" class="toggle-btn" onclick="toggleNotesVisibility()">👁️ Hide Notes</button>
+            <button id="notes-visibility-btn" class="toggle-btn" onclick="toggleNotesVisibility()">👁️ Hide All Notes</button>
         </div>
 
         <div id="import-tools" class="tool-panel hidden">
@@ -110,7 +124,7 @@
         </div>
 
         <div id="notes-tools" class="tool-panel hidden">
-            <textarea id="note-input" rows="3" placeholder="Type a reminder or pattern adjustment here..."></textarea>
+            <textarea id="note-input" rows="3" placeholder="Type a quick reminder for this row..."></textarea>
             <div class="btn-row">
                 <button class="action-btn" onclick="saveQuickNote('row')">Save to Current Row</button>
                 <button class="action-btn" onclick="saveQuickNote('project')">Save to Project</button>
@@ -120,7 +134,7 @@
         <div id="notes-dashboard" class="tool-panel hidden">
             <h3 style="margin-top:0;">Notes Dashboard</h3>
             <div id="dashboard-content"></div>
-            <button class="action-btn" style="background:var(--dark-brown);" onclick="toggleMenu('notes-dashboard')">Close Dashboard</button>
+            <button class="action-btn" style="background:var(--dark-brown); margin-top:10px;" onclick="toggleMenu('notes-dashboard')">Close Dashboard</button>
         </div>
     </div>
 
@@ -155,6 +169,8 @@
         let historyStack = [];
         let showNotesOnMain = true; 
 
+        // --- Core Progress Data Handlers ---
+        
         function getProgressObj(id) {
             if (!allProgress[id]) {
                 allProgress[id] = { currentRow: 0, projectNotes: "", rowNotes: {} };
@@ -163,6 +179,70 @@
             }
             return allProgress[id];
         }
+
+        // Unified Note Fetchers
+        function getUnifiedRowNoteData(rowIndex) {
+            const pData = getProgressObj(activeProject.projectId);
+            let n = pData.rowNotes[rowIndex];
+            let pText = activeProject.rowNotes ? (activeProject.rowNotes[rowIndex] || "") : "";
+            let result = { user: "", pattern: pText, userHidden: false, patternHidden: false };
+
+            if (typeof n === 'string') {
+                result.user = n;
+            } else if (typeof n === 'object' && n !== null) {
+                result.user = n.user !== undefined ? n.user : "";
+                if (n.pattern !== undefined) result.pattern = n.pattern;
+                result.userHidden = !!n.userHidden;
+                result.patternHidden = !!n.patternHidden;
+            }
+            return result;
+        }
+
+        function getUnifiedProjectNoteData() {
+            const pData = getProgressObj(activeProject.projectId);
+            let pText = activeProject.projectNote || "";
+            let result = { user: "", pattern: pText, userHidden: false, patternHidden: false };
+            let str = pData.projectNotes || "";
+
+            if (str.startsWith("{")) {
+                try {
+                    let n = JSON.parse(str);
+                    result.user = n.user !== undefined ? n.user : "";
+                    if (n.pattern !== undefined) result.pattern = n.pattern;
+                    result.userHidden = !!n.userHidden;
+                    result.patternHidden = !!n.patternHidden;
+                } catch(e) { result.user = str; }
+            } else {
+                result.user = str;
+            }
+            return result;
+        }
+
+        // Unified Note Savers
+        function setUnifiedRowNoteData(rowIndex, data) {
+            const pData = getProgressObj(activeProject.projectId);
+            let originalPattern = activeProject.rowNotes ? (activeProject.rowNotes[rowIndex] || "") : "";
+            
+            // Clean up if it's completely empty/default
+            if (!data.user && !data.userHidden && data.pattern === originalPattern && !data.patternHidden) {
+                delete pData.rowNotes[rowIndex];
+            } else {
+                pData.rowNotes[rowIndex] = data;
+            }
+        }
+
+        function setUnifiedProjectNoteData(data) {
+            const pData = getProgressObj(activeProject.projectId);
+            let originalPattern = activeProject.projectNote || "";
+            
+            if (!data.user && !data.userHidden && data.pattern === originalPattern && !data.patternHidden) {
+                pData.projectNotes = "";
+            } else {
+                pData.projectNotes = JSON.stringify(data);
+            }
+        }
+
+        // --- Initialization and UI ---
 
         function saveToLocalMemory() {
             localStorage.setItem("custardProjects", JSON.stringify(allProjects));
@@ -235,10 +315,9 @@
 
         function renderUI() {
             if (!activeProject) return;
-            const pData = getProgressObj(activeProject.projectId);
             const totalRows = activeProject.instructions.length;
             
-            // 1. Row Counter Update
+            // 1. Row Counter
             const counterEl = document.getElementById("row-counter");
             if (currentRowIndex < totalRows) {
                 counterEl.innerText = `Row ${currentRowIndex + 1} / ${totalRows}`;
@@ -247,27 +326,25 @@
                 counterEl.classList.add("hidden");
             }
 
-            // 2. Instruction Text
+            // 2. Main Instruction
             const currentInst = activeProject.instructions[currentRowIndex] || "🎉 Project Complete!";
             document.getElementById("current-instruction").innerText = currentInst;
 
-            // 3. Project Notes Logic
-            const jsonProjNote = activeProject.projectNote || "";
-            const userProjNote = pData.projectNotes || "";
+            // 3. Project Notes Display
+            let pNote = getUnifiedProjectNoteData();
             let finalProjNote = "";
-            if (jsonProjNote) finalProjNote += `<span class='note-label'>Pattern Note:</span> ${jsonProjNote}<br><br>`;
-            if (userProjNote) finalProjNote += `<span class='note-label'>My Note:</span> ${userProjNote}`;
+            if (pNote.pattern && !pNote.patternHidden) finalProjNote += `<span class='note-label'>Pattern Note:</span> ${pNote.pattern}<br>`;
+            if (pNote.user && !pNote.userHidden) finalProjNote += `<span class='note-label'>My Note:</span> ${pNote.user}`;
             
             const projNoteEl = document.getElementById("current-project-note");
             projNoteEl.innerHTML = finalProjNote.trim();
             projNoteEl.classList.toggle("hidden", finalProjNote.trim() === "" || !showNotesOnMain);
 
-            // 4. Row Notes Logic
-            const jsonRowNote = activeProject.rowNotes ? activeProject.rowNotes[currentRowIndex] : null;
-            const userRowNote = pData.rowNotes ? pData.rowNotes[currentRowIndex] : null;
+            // 4. Row Notes Display
+            let rNote = getUnifiedRowNoteData(currentRowIndex);
             let finalRowNote = "";
-            if (jsonRowNote) finalRowNote += `<span class='note-label'>Pattern Note:</span> ${jsonRowNote}<br><br>`;
-            if (userRowNote) finalRowNote += `<span class='note-label'>My Note:</span> ${userRowNote}`;
+            if (rNote.pattern && !rNote.patternHidden) finalRowNote += `<span class='note-label'>Pattern Note:</span> ${rNote.pattern}<br>`;
+            if (rNote.user && !rNote.userHidden) finalRowNote += `<span class='note-label'>My Note:</span> ${rNote.user}`;
             
             const rowNoteEl = document.getElementById("current-row-note");
             rowNoteEl.innerHTML = finalRowNote.trim();
@@ -283,24 +360,24 @@
                 
                 if (index < currentRowIndex) li.className = "done";
                 if (index === currentRowIndex) li.classList.add("active-row");
-                
                 listEl.appendChild(li);
             });
 
             document.getElementById("undo-button").disabled = (historyStack.length === 0);
         }
 
+        // Global Notes Toggle
         function toggleNotesVisibility() {
             showNotesOnMain = !showNotesOnMain;
             const btn = document.getElementById("notes-visibility-btn");
-            btn.innerText = showNotesOnMain ? "👁️ Hide Notes" : "👁️ Show Notes";
+            btn.innerText = showNotesOnMain ? "👁️ Hide All Notes" : "👁️ Show All Notes";
             renderUI();
         }
 
         function setSyncStatus(message) {
             const statusEl = document.getElementById("sync-status");
             statusEl.innerText = message;
-            if (message === "The purins have agreed!" || message === "Sync complete!" || message === "Notes updated!") {
+            if (message === "The purins have agreed!" || message === "Sync complete!" || message === "Syncing dashboard to purins...") {
                 setTimeout(() => { if (statusEl.innerText === message) statusEl.innerText = ""; }, 2000);
             }
         }
@@ -321,14 +398,13 @@
             .catch(error => { setSyncStatus("Offline mode - Saved locally!"); });
         }
 
+        // --- Core Navigation ---
         function nextRow() {
             if (currentRowIndex < activeProject.instructions.length) {
                 historyStack.push(currentRowIndex);
                 currentRowIndex++;
-                
                 const pData = getProgressObj(activeProject.projectId);
                 pData.currentRow = currentRowIndex;
-                
                 saveToLocalMemory(); 
                 renderUI(); 
                 setSyncStatus("Consulting the purins..."); 
@@ -339,10 +415,8 @@
         function undoRow() {
             if (historyStack.length > 0) {
                 currentRowIndex = historyStack.pop();
-                
                 const pData = getProgressObj(activeProject.projectId);
                 pData.currentRow = currentRowIndex;
-                
                 saveToLocalMemory(); 
                 renderUI();
                 setSyncStatus("Consulting the purins...");
@@ -354,15 +428,15 @@
             if (targetIndex === currentRowIndex) return;
             historyStack.push(currentRowIndex); 
             currentRowIndex = targetIndex;
-            
             const pData = getProgressObj(activeProject.projectId);
             pData.currentRow = currentRowIndex;
-            
             saveToLocalMemory();
             renderUI();
             setSyncStatus("Consulting the purins...");
             syncProgressToSheets(pData);
         }
+
+        // --- Notes Dashboard Logic ---
 
         function openNotesDashboard() {
             toggleMenu('notes-dashboard', true);
@@ -374,30 +448,65 @@
             const pData = getProgressObj(activeProject.projectId);
             const dash = document.getElementById("dashboard-content");
             const maxRow = activeProject.instructions.length - 1;
+            let html = '';
 
-            let html = `<div class="dash-item">
-                <div class="dash-item-header">Project Note</div>
-                <textarea id="dash-proj-note" rows="2">${pData.projectNotes || ""}</textarea>
-                <button class="action-btn" onclick="dashSaveProjectNote()">Save Project Note</button>
+            // Project Notes Block
+            let pNote = getUnifiedProjectNoteData();
+            html += `<div class="dash-item">
+                <div class="dash-item-header">Project Notes</div>
+                
+                <label class="note-label">Pattern Note (from JSON)</label>
+                <textarea id="dash-proj-pattern" rows="2">${pNote.pattern}</textarea>
+                <button class="action-btn ${pNote.patternHidden ? 'hidden-btn' : ''}" style="margin-bottom:10px;" onclick="toggleDashNote('project', 'pattern')">
+                    ${pNote.patternHidden ? '👁️ Note is Hidden (Click to Show)' : '👁️ Note is Visible (Click to Hide)'}
+                </button>
+
+                <label class="note-label">My Note</label>
+                <textarea id="dash-proj-user" rows="2">${pNote.user}</textarea>
+                <button class="action-btn ${pNote.userHidden ? 'hidden-btn' : ''}" style="margin-bottom:10px;" onclick="toggleDashNote('project', 'user')">
+                    ${pNote.userHidden ? '👁️ Note is Hidden (Click to Show)' : '👁️ Note is Visible (Click to Hide)'}
+                </button>
+
+                <button class="action-btn" style="background:var(--dark-brown);" onclick="dashSaveProjectNote()">Save Project Notes</button>
             </div>`;
 
             html += `<h4 style="margin-bottom:5px;">Row Notes</h4>`;
             
-            const rowKeys = Object.keys(pData.rowNotes).sort((a,b) => parseInt(a) - parseInt(b));
-            if(rowKeys.length === 0) {
-                html += `<p style="font-size:14px; color:#666;">No row notes saved yet.</p>`;
+            // Gather all rows that have either user notes or pattern notes
+            let rowKeys = new Set();
+            if (activeProject.rowNotes) Object.keys(activeProject.rowNotes).forEach(k => rowKeys.add(parseInt(k)));
+            if (pData.rowNotes) Object.keys(pData.rowNotes).forEach(k => rowKeys.add(parseInt(k)));
+            
+            let sortedRows = Array.from(rowKeys).sort((a,b) => a - b);
+            
+            if(sortedRows.length === 0) {
+                html += `<p style="font-size:14px; color:#666;">No row notes exist for this project yet.</p>`;
             }
 
-            rowKeys.forEach(row => {
+            // Generate Dashboard Items for Each Row
+            sortedRows.forEach(row => {
+                let rNote = getUnifiedRowNoteData(row);
                 html += `<div class="dash-item">
                     <div class="dash-item-header">
-                        <label>Row Index:</label>
+                        <label>Assigned to Row:</label>
                         <input type="number" id="dash-row-num-${row}" value="${row}" min="0" max="${maxRow}">
                     </div>
-                    <textarea id="dash-row-text-${row}" rows="2">${pData.rowNotes[row]}</textarea>
+                    
+                    <label class="note-label">Pattern Note</label>
+                    <textarea id="dash-row-pattern-${row}" rows="2">${rNote.pattern}</textarea>
+                    <button class="action-btn ${rNote.patternHidden ? 'hidden-btn' : ''}" style="margin-bottom:10px;" onclick="toggleDashNote('row', 'pattern', ${row})">
+                        ${rNote.patternHidden ? '👁️ Note is Hidden (Click to Show)' : '👁️ Note is Visible (Click to Hide)'}
+                    </button>
+
+                    <label class="note-label">My Note</label>
+                    <textarea id="dash-row-user-${row}" rows="2">${rNote.user}</textarea>
+                    <button class="action-btn ${rNote.userHidden ? 'hidden-btn' : ''}" style="margin-bottom:10px;" onclick="toggleDashNote('row', 'user', ${row})">
+                        ${rNote.userHidden ? '👁️ Note is Hidden (Click to Show)' : '👁️ Note is Visible (Click to Hide)'}
+                    </button>
+
                     <div class="btn-row">
-                        <button class="action-btn" onclick="dashSaveRowNote('${row}')">Save/Move</button>
-                        <button class="action-btn danger-btn" onclick="dashDeleteRowNote('${row}')">Delete</button>
+                        <button class="action-btn" onclick="dashSaveRowNote(${row})">Save Changes / Move</button>
+                        <button class="action-btn danger-btn" onclick="dashDeleteRowNote(${row})">Reset to Default</button>
                     </div>
                 </div>`;
             });
@@ -405,71 +514,92 @@
             dash.innerHTML = html;
         }
 
+        // Toggles a specific note's visibility, auto-saves, and re-renders
+        function toggleDashNote(type, target, row = null) {
+            if (type === 'project') {
+                let data = getUnifiedProjectNoteData();
+                data.pattern = document.getElementById("dash-proj-pattern").value;
+                data.user = document.getElementById("dash-proj-user").value;
+                if (target === 'pattern') data.patternHidden = !data.patternHidden;
+                if (target === 'user') data.userHidden = !data.userHidden;
+                setUnifiedProjectNoteData(data);
+            } else {
+                let data = getUnifiedRowNoteData(row);
+                data.pattern = document.getElementById(`dash-row-pattern-${row}`).value;
+                data.user = document.getElementById(`dash-row-user-${row}`).value;
+                if (target === 'pattern') data.patternHidden = !data.patternHidden;
+                if (target === 'user') data.userHidden = !data.userHidden;
+                setUnifiedRowNoteData(row, data);
+            }
+            finalizeNoteAction();
+            renderNotesDashboard();
+        }
+
         function dashSaveProjectNote() {
-            const text = document.getElementById("dash-proj-note").value.trim();
-            const pData = getProgressObj(activeProject.projectId);
-            pData.projectNotes = text;
-            finalizeNoteAction(pData);
+            let data = getUnifiedProjectNoteData();
+            data.pattern = document.getElementById("dash-proj-pattern").value.trim();
+            data.user = document.getElementById("dash-proj-user").value.trim();
+            setUnifiedProjectNoteData(data);
+            finalizeNoteAction();
         }
 
         function dashSaveRowNote(oldRowIndex) {
-            const newRowIndex = document.getElementById(`dash-row-num-${oldRowIndex}`).value;
-            const text = document.getElementById(`dash-row-text-${oldRowIndex}`).value.trim();
-            const pData = getProgressObj(activeProject.projectId);
+            const inputEl = document.getElementById(`dash-row-num-${oldRowIndex}`);
+            if (!inputEl) return;
+            const newRowIndex = parseInt(inputEl.value);
 
-            if (text === "") {
-                delete pData.rowNotes[oldRowIndex]; 
-            } else {
-                if (oldRowIndex !== newRowIndex) {
-                    delete pData.rowNotes[oldRowIndex]; 
-                }
-                pData.rowNotes[newRowIndex] = text; 
+            let data = getUnifiedRowNoteData(oldRowIndex);
+            data.pattern = document.getElementById(`dash-row-pattern-${oldRowIndex}`).value.trim();
+            data.user = document.getElementById(`dash-row-user-${oldRowIndex}`).value.trim();
+
+            if (oldRowIndex !== newRowIndex) {
+                const pData = getProgressObj(activeProject.projectId);
+                delete pData.rowNotes[oldRowIndex]; // Remove from old spot if moved
             }
-
-            finalizeNoteAction(pData);
+            
+            setUnifiedRowNoteData(newRowIndex, data);
+            finalizeNoteAction();
             renderNotesDashboard(); 
         }
 
+        // Wipes all custom modifications and restores the JSON defaults
         function dashDeleteRowNote(rowIndex) {
             const pData = getProgressObj(activeProject.projectId);
-            delete pData.rowNotes[rowIndex];
-            finalizeNoteAction(pData);
+            delete pData.rowNotes[rowIndex]; 
+            finalizeNoteAction();
             renderNotesDashboard(); 
         }
 
-        function finalizeNoteAction(pData) {
+        // Quick Note Action
+        function saveQuickNote(type) {
+            const inputField = document.getElementById("note-input");
+            const noteText = inputField.value.trim();
+            if (!activeProject || !noteText) return;
+
+            if (type === 'project') {
+                let data = getUnifiedProjectNoteData();
+                data.user = noteText;
+                setUnifiedProjectNoteData(data);
+            } else if (type === 'row') {
+                let data = getUnifiedRowNoteData(currentRowIndex);
+                data.user = noteText;
+                setUnifiedRowNoteData(currentRowIndex, data);
+            }
+
+            finalizeNoteAction();
+            inputField.value = "";
+            toggleMenu('notes-tools'); 
+        }
+
+        function finalizeNoteAction() {
+            const pData = getProgressObj(activeProject.projectId);
             saveToLocalMemory();
             renderUI();
             setSyncStatus("Syncing dashboard to purins...");
             syncProgressToSheets(pData);
         }
 
-        function saveQuickNote(type) {
-            const inputField = document.getElementById("note-input");
-            const noteText = inputField.value.trim();
-            if (!activeProject) return;
-
-            const pData = getProgressObj(activeProject.projectId);
-
-            if (type === 'project') {
-                pData.projectNotes = noteText;
-            } else if (type === 'row') {
-                if (noteText === "") {
-                    delete pData.rowNotes[currentRowIndex];
-                } else {
-                    pData.rowNotes[currentRowIndex] = noteText;
-                }
-            }
-
-            saveToLocalMemory();
-            renderUI();
-            inputField.value = "";
-            toggleMenu('notes-tools'); 
-            
-            setSyncStatus("Syncing note to purins...");
-            syncProgressToSheets(pData);
-        }
-
+        // --- Utility ---
         function toggleMenu(menuId, forceOpen = false) {
             const menu = document.getElementById(menuId);
             
@@ -498,7 +628,6 @@
 
             try {
                 const newProject = JSON.parse(jsonText);
-                
                 allProjects.push(newProject);
                 saveToLocalMemory();
                 populateHopper();
@@ -523,7 +652,6 @@
 
         async function deleteProject() {
             if (!activeProject) return;
-            
             const confirmDelete = confirm(`Are you sure you want to permanently delete "${activeProject.projectName}"?`);
             if (!confirmDelete) return;
             
@@ -533,7 +661,6 @@
             populateHopper(); 
 
             setSyncStatus("Asking purins to delete...");
-
             try {
                 const response = await fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
