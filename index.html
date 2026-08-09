@@ -6,43 +6,67 @@
     <title>CustardCrochet</title>
     <style>
         body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #fdfbf7; color: #333; }
+        
+        /* Header & Hopper */
         header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
-        .tools { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
         select, button, textarea { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; }
-        select, button { flex: 1; }
+        select { flex: 1; }
+        
+        /* Delete Button */
+        #delete-button { background-color: #ff4d4d; color: white; border: none; cursor: pointer; font-weight: bold; width: 100px; }
+        #delete-button:hover { background-color: #e60000; }
+        
+        /* Import Section */
+        .import-section { width: 100%; max-width: 400px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .toggle-btn { background-color: #e0e0e0; border: none; cursor: pointer; color: #333; }
+        .toggle-btn:hover { background-color: #ccc; }
+        #import-tools { display: flex; flex-direction: column; gap: 10px; }
         textarea { resize: vertical; font-family: monospace; font-size: 14px; }
         .import-btn { background-color: #4CAF50; color: white; border: none; cursor: pointer; font-weight: bold; }
         .import-btn:hover { background-color: #45a049; }
         
-        .instruction-box { width: 100%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; margin-bottom: 30px; box-sizing: border-box; }
-        h2 { margin-top: 0; }
+        /* Main Instruction Display */
+        .instruction-box { width: 100%; max-width: 400px; background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; margin-bottom: 30px; box-sizing: border-box; }
+        #current-instruction { font-size: 24px; font-weight: bold; margin: 0; line-height: 1.4; color: #222; }
         
-        #next-button { width: 100%; max-width: 400px; height: 150px; font-size: 24px; font-weight: bold; background-color: #ff9800; color: white; border: none; border-radius: 20px; cursor: pointer; box-shadow: 0 8px 15px rgba(255, 152, 0, 0.4); transition: background-color 0.2s; }
+        /* Main Buttons */
+        .button-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        #next-button { width: 100%; height: 150px; font-size: 28px; font-weight: bold; background-color: #ff9800; color: white; border: none; border-radius: 20px; cursor: pointer; box-shadow: 0 8px 15px rgba(255, 152, 0, 0.4); transition: background-color 0.2s; }
         #next-button:active { background-color: #e68a00; transform: translateY(2px); box-shadow: none; }
         #next-button:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
         
+        #undo-button { width: 100%; padding: 15px; font-size: 18px; background-color: #f0f0f0; color: #555; border: 1px solid #ccc; border-radius: 12px; cursor: pointer; }
+        #undo-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Pattern Overview */
         .all-instructions { width: 100%; max-width: 400px; margin-top: 30px; text-align: left; }
         .done { text-decoration: line-through; color: #888; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <header>
         <select id="project-hopper" onchange="switchProject()"></select>
-        <button id="undo-button" onclick="undoRow()">Undo</button>
+        <button id="delete-button" onclick="deleteProject()">🗑️ Delete</button>
     </header>
 
-    <div class="tools">
-        <textarea id="json-input" rows="4" placeholder="Paste your generated pattern JSON here..."></textarea>
-        <button class="import-btn" onclick="importJson()">Import Pattern</button>
+    <div class="import-section">
+        <button class="toggle-btn" onclick="toggleImport()">➕ Add New Pattern</button>
+        <div id="import-tools" class="hidden">
+            <textarea id="json-input" rows="4" placeholder="Paste your generated pattern JSON here..."></textarea>
+            <button class="import-btn" onclick="importJson()">Import Pattern</button>
+        </div>
     </div>
 
     <div class="instruction-box">
-        <h2 id="project-title">Loading...</h2>
         <p id="current-instruction">Fetching your projects from Google Sheets...</p>
     </div>
 
-    <button id="next-button" onclick="nextRow()" disabled>Next Row</button>
+    <div class="button-group">
+        <button id="next-button" onclick="nextRow()" disabled>Next Row</button>
+        <button id="undo-button" onclick="undoRow()">Undo Previous Row</button>
+    </div>
 
     <div class="all-instructions">
         <h3>Pattern Overview</h3>
@@ -51,7 +75,7 @@
 
     <script>
         // PASTE YOUR GOOGLE SHEETS WEB APP URL HERE
-        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5RGd8FvKLXUBHsBeQnFMWn8K8pC5_7oziggQrG8cKTDtAXFQ1QGJdoQ7JLHAbeOqi_A/exec";
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzHYABF4BOo91BV9P2Fyco32kzdXKqn_ZJy3rzbik_Vqrm2_3PWVVT-kNEiZxeoVLAmOg/exec";
 
         let allProjects = [];
         let allProgress = {};
@@ -59,7 +83,6 @@
         let currentRowIndex = 0;
         let historyStack = [];
 
-        // 1. Boot up and fetch data from Backend
         async function initApp() {
             try {
                 const response = await fetch(GOOGLE_WEB_APP_URL);
@@ -68,21 +91,20 @@
                 allProgress = data.progress;
                 populateHopper();
             } catch (error) {
-                document.getElementById("project-title").innerText = "Error";
                 document.getElementById("current-instruction").innerText = "Could not connect to Google Sheets.";
             }
         }
 
-        // 2. Populate Dropdown and load selected
         function populateHopper() {
             const hopper = document.getElementById("project-hopper");
             hopper.innerHTML = "";
             if (allProjects.length === 0) {
                 hopper.innerHTML = "<option>No Projects Found</option>";
-                document.getElementById("project-title").innerText = "Paste a Pattern!";
-                document.getElementById("current-instruction").innerText = "Use the text box above to get started.";
+                document.getElementById("current-instruction").innerText = "Tap 'Add New Pattern' to get started!";
+                document.getElementById("delete-button").disabled = true;
                 return;
             }
+            document.getElementById("delete-button").disabled = false;
             allProjects.forEach(proj => {
                 let opt = document.createElement("option");
                 opt.value = proj.projectId;
@@ -104,9 +126,8 @@
 
         function renderUI() {
             if (!activeProject) return;
-            document.getElementById("project-title").innerText = activeProject.projectName;
             
-            const currentInst = activeProject.instructions[currentRowIndex] || "Project Complete!";
+            const currentInst = activeProject.instructions[currentRowIndex] || "🎉 Project Complete!";
             document.getElementById("current-instruction").innerText = currentInst;
 
             const listEl = document.getElementById("instruction-list");
@@ -121,7 +142,6 @@
             document.getElementById("undo-button").disabled = (historyStack.length === 0);
         }
 
-        // 3. The Big Next Button Logic
         async function nextRow() {
             if (currentRowIndex < activeProject.instructions.length) {
                 const button = document.getElementById("next-button");
@@ -150,7 +170,6 @@
             }
         }
 
-        // 4. Undo Logic
         async function undoRow() {
             if (historyStack.length > 0) {
                 const prevRowIndex = historyStack.pop();
@@ -175,46 +194,73 @@
             }
         }
 
-        // 5. JSON Copy-Paste Logic
+        // Toggle the JSON Input Box
+        function toggleImport() {
+            const tools = document.getElementById("import-tools");
+            tools.classList.toggle("hidden");
+        }
+
         async function importJson() {
             const inputField = document.getElementById("json-input");
             const jsonText = inputField.value.trim();
             const button = document.querySelector(".import-btn");
 
-            if (!jsonText) {
-                alert("Please paste the JSON code first!");
-                return;
-            }
+            if (!jsonText) { alert("Please paste the JSON code first!"); return; }
 
             try {
-                // Try to parse the pasted text to make sure it's valid JSON
                 const newProject = JSON.parse(jsonText);
-                
                 button.innerText = "Importing...";
                 button.disabled = true;
 
-                // Send to Google Sheets
                 const response = await fetch(GOOGLE_WEB_APP_URL, {
                     method: "POST",
                     body: JSON.stringify({ action: "addProject", ...newProject })
                 });
                 
                 const result = await response.json();
-                
                 if(result.status === "project_added") {
                     allProjects.push(newProject);
                     populateHopper();
                     document.getElementById("project-hopper").value = newProject.projectId;
                     switchProject();
-                    
-                    // Clear the text box after successful import
                     inputField.value = ""; 
+                    toggleImport(); // Hide the box after successful import
                 }
             } catch (err) {
                 alert("Oops! The text you pasted isn't valid JSON, or there was a connection error.");
-                console.error(err);
             } finally {
                 button.innerText = "Import Pattern";
+                button.disabled = false;
+            }
+        }
+
+        // Delete Project Logic
+        async function deleteProject() {
+            if (!activeProject) return;
+            
+            const confirmDelete = confirm(`Are you sure you want to permanently delete "${activeProject.projectName}"?`);
+            if (!confirmDelete) return;
+
+            const button = document.getElementById("delete-button");
+            button.innerText = "Deleting...";
+            button.disabled = true;
+
+            try {
+                const response = await fetch(GOOGLE_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "deleteProject", projectId: activeProject.projectId })
+                });
+                
+                const result = await response.json();
+                if(result.status === "project_deleted") {
+                    allProjects = allProjects.filter(p => p.projectId !== activeProject.projectId);
+                    delete allProgress[activeProject.projectId];
+                    populateHopper(); 
+                }
+            } catch (err) {
+                alert("Failed to delete the project. Please check your connection.");
+            } finally {
+                button.innerText = "🗑️ Delete";
                 button.disabled = false;
             }
         }
